@@ -23,7 +23,7 @@ export default function HomePage() {
   const [playerNameInput, setPlayerNameInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const { connectAndJoin, playerName } = useContext(AppContext);
+  const { connectAndJoin, createRoom, playerName } = useContext(AppContext);
 
   const [showCreateRoomModal, setShowCreateRoomModal] = useState(false);
   const [showJoinRoomModal, setShowJoinRoomModal] = useState(false);
@@ -55,12 +55,14 @@ export default function HomePage() {
   }
 
   const submitCreateRoom = () => {
-    // Mock logic, in real app would emit to socket
-    const roomId = `mock-room-${Math.random().toString(36).substring(7)}`;
-    console.log(`Creating room: ${roomId}, private: ${isPrivate}, password: ${roomPassword}`);
+    if (!playerNameInput.trim()) return;
+    
+    createRoom({
+      playerName: playerNameInput.trim(),
+      isPrivate,
+      password: roomPassword,
+    });
     setShowCreateRoomModal(false);
-    connectAndJoin(playerNameInput.trim()); // Connect with the name
-    router.push(`/room/${roomId}`);
   }
 
   const submitJoinRoom = () => {
