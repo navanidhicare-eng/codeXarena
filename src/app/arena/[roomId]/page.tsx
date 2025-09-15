@@ -40,7 +40,8 @@ export default function ArenaView({ params }: { params: { roomId: string } }) {
 
 
   useEffect(() => {
-    if (!playerName) {
+    // Redirect if player name is not set, but not on the server
+    if (typeof window !== 'undefined' && !playerName) {
       router.push("/");
     }
   }, [playerName, router]);
@@ -79,6 +80,10 @@ export default function ArenaView({ params }: { params: { roomId: string } }) {
     setShowDiceRoll(false);
   }
 
+  if (showDiceRoll && gameState) {
+    return <DiceRollAnimation onAnimationComplete={handleAnimationComplete} />;
+  }
+
   if (!gameState || !playerName) {
     return (
       <div className="h-screen w-screen bg-background p-4 flex flex-col gap-4">
@@ -104,11 +109,6 @@ export default function ArenaView({ params }: { params: { roomId: string } }) {
     );
   }
   
-  if (showDiceRoll) {
-    return <DiceRollAnimation onAnimationComplete={handleAnimationComplete} />;
-  }
-
-
   return (
     <div className="h-screen w-screen bg-background p-4 flex flex-col gap-4">
       <div className="relative">

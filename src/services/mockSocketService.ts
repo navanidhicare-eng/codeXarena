@@ -1,4 +1,3 @@
-
 type Language = "javascript" | "python" | "java" | "cpp";
 
 type StarterCode = {
@@ -27,18 +26,26 @@ const starterCodes: StarterCode = {
     cpp: `class Solution {\npublic:\n  vector<int> twoSum(vector<int>& nums, int target) {\n    // Write your code here\n  }\n};`
 };
 
+// Store callbacks
 let onMatchFoundCallback: (gameState: Omit<GameState, 'matchId'>) => void;
 let onStateUpdateCallback: (gameState: GameState) => void;
 let onGameOverCallback: (data: { winner: string }) => void;
 let onHintResultCallback: (data: { hint: string }) => void;
 let onHintErrorCallback: (data: { error: string }) => void;
 let onEmojiReceiveCallback: (data: { emoji: string }) => void;
+let onRoomCreatedCallback: (data: { roomId: string }) => void;
+let onRoomUpdatedCallback: (data: { players: string[] }) => void;
+let onRoomJoinFailedCallback: (data: { error: string }) => void;
+let onRoomClosedCallback: () => void;
 
-let mockGameState: GameState;
+
+// In-memory store for rooms
+const rooms: { [key: string]: any } = {};
+let mockGameState: GameState; // Keep this for quick-match
 
 const connect = (playerName: string) => {
     console.log(`Mock socket connected for player: ${playerName}`);
-    // Reset state on new connection
+    // Reset state on new connection for quick-match
     mockGameState = {
         matchId: '', // This will be set on the client
         status: 'waiting',
@@ -73,18 +80,56 @@ const connect = (playerName: string) => {
 };
 
 const joinMatchmaking = () => {
-    console.log('Player joined matchmaking. Simulating delay...');
+    console.log('Player joined quick-match matchmaking. Simulating delay...');
     setTimeout(() => {
         mockGameState.status = 'in-progress';
         if (onMatchFoundCallback) {
-            console.log('Simulating match found. Firing callback.');
+            console.log('Simulating match found for quick-match.');
             const { matchId, ...rest } = mockGameState;
             onMatchFoundCallback(rest);
         }
-        // Simulate opponent activity
         simulateOpponent();
     }, 2000);
 };
+
+// --- New Room-based events ---
+const createRoom = (options: { isPrivate: boolean, password?: string, playerName: string }) => {
+    const roomId = `room-${Math.random().toString(36).substring(2, 8)}`;
+    rooms[roomId] = {
+        players: [options.playerName],
+        admin: options.playerName,
+        isPrivate: options.isPrivate,
+        password: options.password,
+        problem: {
+            title: 'Random Problem',
+            description: 'This is a randomly selected problem for your custom room.',
+        },
+    };
+    console.log(`Room created: ${roomId}`, rooms[roomId]);
+    if (onRoomCreatedCallback) {
+        onRoomCreatedCallback({ roomId });
+    }
+};
+
+const joinRoom = (options: { roomId: string, password?: string, playerName: string }) => {
+    const room = rooms[options.roomId];
+    if (!room) {
+        if (onRoomJoinFailedCallback) onRoomJoinFailedCallback({ error: "Room not found." });
+        return;
+    }
+    if (room.isPrivate && room.password !== options.password) {
+        if (onRoomJoinFailedCallback) onRoomJoinFailedCallback({ error: "Invalid password." });
+        return;
+    }
+    room.players.push(options.playerName);
+    console.log(`${options.playerName} joined ${options.roomId}. Players:`, room.players);
+    if (onRoomUpdatedCallback) {
+        // In a real scenario, you'd emit to all clients in the room.
+        // Here we just fire the callback for the current client.
+        onRoomUpdatedCallback({ players: room.players });
+    }
+};
+
 
 const emitRunCode = (code: string) => {
     console.log(`Received code to run: ${code}`);
@@ -122,8 +167,6 @@ const emitGetHint = () => {
 
 const emitSendEmoji = (emoji: string) => {
     console.log(`Player sent emoji: ${emoji}`);
-    // In a real app, this would be sent over the socket.
-    // For the mock, we'll just log it.
 };
 
 const simulateOpponent = () => {
@@ -135,10 +178,9 @@ const simulateOpponent = () => {
             return;
         }
 
-        // Simulate test case pass
         const firstUnsolvedIndex = opponent.testCases.findIndex(tc => tc.passed !== true);
         if (firstUnsolvedIndex !== -1) {
-            if (Math.random() > 0.7) { // 30% chance to pass a test case every interval
+            if (Math.random() > 0.7) { 
                  opponent.testCases[firstUnsolvedIndex].passed = true;
                  opponent.score = opponent.testCases.filter(tc => tc.passed === true).length;
                  if (onStateUpdateCallback) {
@@ -147,8 +189,7 @@ const simulateOpponent = () => {
             }
         }
 
-        // Simulate emoji send
-        if (Math.random() > 0.9) { // 10% chance to send an emoji
+        if (Math.random() > 0.9) { 
             const emojis = ['👍', '😂', '🤔', '🔥', '🤯'];
             const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
             if(onEmojiReceiveCallback) {
@@ -164,48 +205,45 @@ const simulateOpponent = () => {
             }
             clearInterval(opponentActivityInterval);
         }
-
-    }, 4000); // Opponent action every 4 seconds
+    }, 4000); 
 }
 
 
-const onMatchFound = (callback: (gameState: Omit<GameState, 'matchId'>) => void) => {
-    onMatchFoundCallback = callback;
-};
-
-const onStateUpdate = (callback: (gameState: GameState) => void) => {
-    onStateUpdateCallback = callback;
-};
-
-const onGameOver = (callback: (data: { winner: string }) => void) => {
-    onGameOverCallback = callback;
-};
-
-const onHintResult = (callback: (data: { hint: string }) => void) => {
-    onHintResultCallback = callback;
-};
-
-const onHintError = (callback: (data: { error: string }) => void) => {
-    onHintErrorCallback = callback;
-};
-
-const onEmojiReceive = (callback: (data: { emoji: string }) => void) => {
-    onEmojiReceiveCallback = callback;
-};
+// --- Callback setters ---
+const onMatchFound = (callback: (gameState: Omit<GameState, 'matchId'>) => void) => onMatchFoundCallback = callback;
+const onStateUpdate = (callback: (gameState: GameState) => void) => onStateUpdateCallback = callback;
+const onGameOver = (callback: (data: { winner: string }) => void) => onGameOverCallback = callback;
+const onHintResult = (callback: (data: { hint: string }) => void) => onHintResultCallback = callback;
+const onHintError = (callback: (data: { error: string }) => void) => onHintErrorCallback = callback;
+const onEmojiReceive = (callback: (data: { emoji: string }) => void) => onEmojiReceiveCallback = callback;
+const onRoomCreated = (callback: (data: { roomId: string }) => void) => onRoomCreatedCallback = callback;
+const onRoomUpdated = (callback: (data: { players: string[] }) => void) => onRoomUpdatedCallback = callback;
+const onRoomJoinFailed = (callback: (data: { error: string }) => void) => onRoomJoinFailedCallback = callback;
+const onRoomClosed = (callback: () => void) => onRoomClosedCallback = callback;
 
 
 const mockSocketService = {
   connect,
+  // Quick Match
   joinMatchmaking,
+  // Custom Rooms
+  createRoom,
+  joinRoom,
+  // In-Game
   emitRunCode,
   emitGetHint,
   emitSendEmoji,
+  // Listeners
   onMatchFound,
   onStateUpdate,
   onGameOver,
   onHintResult,
   onHintError,
   onEmojiReceive,
+  onRoomCreated,
+  onRoomUpdated,
+  onRoomJoinFailed,
+  onRoomClosed,
 };
 
 export default mockSocketService;
