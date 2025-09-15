@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,10 +16,11 @@ export default function LandingPage() {
     if (!playerName.trim() || isLoading) return;
 
     setIsLoading(true);
+    // In a real app, this would be a dynamic room ID from the server
+    const roomId = `room-${Math.random().toString(36).substr(2, 9)}`;
+    
     // Simulate matchmaking
     setTimeout(() => {
-      // In a real app, this would be a dynamic room ID from the server
-      const roomId = `room-${Math.random().toString(36).substr(2, 9)}`;
       router.push(`/arena/${roomId}?player=${encodeURIComponent(playerName.trim())}`);
     }, 2000);
   };
