@@ -1,12 +1,9 @@
-import type {Metadata} from 'next';
+"use client";
+
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { Chatbot } from '@/components/Chatbot';
-
-export const metadata: Metadata = {
-  title: 'Code Arena',
-  description: 'Stop Grinding. Start Battling.',
-};
+import { AppContextProvider } from '@/context/AppContext';
 
 export default function RootLayout({
   children,
@@ -16,14 +13,18 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <head>
+        <title>Code Arena</title>
+        <meta name="description" content="Stop Grinding. Start Battling." />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Roboto+Mono&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased">
-        {children}
-        <Chatbot />
-        <Toaster />
+        <AppContextProvider>
+            {children}
+            <Chatbot />
+            <Toaster />
+        </AppContextProvider>
       </body>
     </html>
   );

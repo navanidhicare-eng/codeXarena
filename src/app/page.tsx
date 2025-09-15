@@ -1,28 +1,31 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useContext, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2 } from "lucide-react";
+import { AppContext } from "@/context/AppContext";
 
 export default function LandingPage() {
   const [playerName, setPlayerName] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const { connect, joinMatchmaking, gameState } = useContext(AppContext);
+
+  useEffect(() => {
+    if (gameState?.matchId) {
+      router.push(`/arena/${gameState.matchId}`);
+    }
+  }, [gameState, router]);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!playerName.trim() || isLoading) return;
 
     setIsLoading(true);
-    // In a real app, this would be a dynamic room ID from the server
-    const roomId = `room-${Math.random().toString(36).substr(2, 9)}`;
-    
-    // Simulate matchmaking
-    setTimeout(() => {
-      router.push(`/arena/${roomId}?player=${encodeURIComponent(playerName.trim())}`);
-    }, 2000);
+    connect(playerName.trim());
+    joinMatchmaking();
   };
 
   return (
@@ -53,7 +56,7 @@ export default function LandingPage() {
           {isLoading ? (
             <>
               <Loader2 className="mr-2 h-6 w-6 animate-spin" />
-              Connecting...
+              Finding Match...
             </>
           ) : (
             "Find 1v1 Match"

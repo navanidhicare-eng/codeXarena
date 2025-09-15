@@ -1,126 +1,118 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { useState, useEffect, useContext } from "react";
+import { AppContext } from "@/context/AppContext";
 import BattleScoreboard from "@/components/BattleScoreboard";
 import { PlayerPanel } from "@/components/PlayerPanel";
 import { OpponentPanel } from "@/components/OpponentPanel";
 import { AIHintModal } from "@/components/AIHintModal";
-import { getAiHint } from "@/ai/flows/ai-hint-system";
-import type { AIHintOutput } from "@/ai/schemas/ai-hint-schemas";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useRouter } from "next/navigation";
 
-// Mock data
-const mockProblem = {
-  title: "Two Sum",
-  description: "Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.\n\nYou may assume that each input would have exactly one solution, and you may not use the same element twice.\n\nYou can return the answer in any order.",
-  starterCode: `function twoSum(nums, target) {\n  // Write your code here\n};`,
-};
-
-export default function ArenaView() {
+export default function ArenaView({ params }: { params: { roomId: string } }) {
   const { toast } = useToast();
-  const searchParams = useSearchParams();
+  const router = useRouter();
+  const {
+    playerName,
+    gameState,
+    isConnected,
+    emitRunCode,
+    emitGetHint,
+    hint,
+    isHintLoading,
+    clearHint,
+  } = useContext(AppContext);
 
-  const [isLoading, setIsLoading] = useState(true);
-  const [problem, setProblem] = useState(mockProblem);
-  const [player1Data, setPlayer1Data] = useState({ name: "DevA", code: problem.starterCode, testCases: [null, null, null] as (boolean | null)[] });
-  const [player2Data, setPlayer2Data] = useState({ name: "DevB", testCases: [null, null, null] as (boolean | null)[] });
-  const [aiHint, setAiHint] = useState<{text: string, isVisible: boolean}>({ text: "", isVisible: false });
-  const [isHintLoading, setIsHintLoading] = useState(false);
+  const [playerCode, setPlayerCode] = useState("");
   const [isCodeRunning, setIsCodeRunning] = useState(false);
 
   useEffect(() => {
-    const playerName = searchParams.get("player");
-    setPlayer1Data(prev => ({ ...prev, name: playerName || "DevA" }));
-    // Simulate fetching initial match data
-    setTimeout(() => setIsLoading(false), 1000);
-  }, [searchParams]);
+    if (!isConnected) {
+      router.push("/");
+    }
+  }, [isConnected, router]);
+  
+  useEffect(() => {
+    if (gameState?.problem?.starterCode) {
+      setPlayerCode(gameState.problem.starterCode);
+    }
+  }, [gameState?.problem?.starterCode])
 
   const handleCodeChange = (code: string) => {
-    setPlayer1Data(prev => ({ ...prev, code }));
+    setPlayerCode(code);
   };
 
   const handleRunCode = () => {
     setIsCodeRunning(true);
-    // Simulate code evaluation
+    emitRunCode(playerCode);
+    // In a real app, we'd get a confirmation from the server.
+    // For now, we'll just simulate a delay.
     setTimeout(() => {
-      // Dummy logic for test results
-      const newTestCases = player1Data.testCases.map(() => Math.random() > 0.4);
-      setPlayer1Data(prev => ({ ...prev, testCases: newTestCases }));
-      
-      // Also simulate opponent progress for demo purposes
-      if (Math.random() > 0.5) {
-          const newOpponentTests = player2Data.testCases.map(() => Math.random() > 0.6);
-          setPlayer2Data(prev => ({ ...prev, testCases: newOpponentTests }));
-      }
-
       setIsCodeRunning(false);
     }, 1500);
   };
 
-  const handleGetHint = async () => {
-    setIsHintLoading(true);
-    setAiHint({ text: "", isVisible: true });
-    try {
-        const hintResult: AIHintOutput = await getAiHint({
-            problemTitle: problem.title,
-            problemDescription: problem.description,
-            code: player1Data.code,
-        });
-        setAiHint({ text: hintResult.text, isVisible: true });
-    } catch (error) {
-        console.error("Error getting AI hint:", error);
-        setAiHint({ text: '', isVisible: false });
-        toast({
-            variant: "destructive",
-            title: "AI Hint Error",
-            description: "Could not fetch hint. Please try again later.",
-        });
-    } finally {
-        setIsHintLoading(false);
-    }
+  const handleGetHint = () => {
+    emitGetHint();
   };
 
-  if (isLoading) {
+  if (!gameState || !playerName) {
     return (
-        <div className="h-screen w-screen bg-background p-4 flex flex-col gap-4">
-            <Skeleton className="w-full h-20 rounded-lg" />
-            <div className="flex-grow grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Skeleton className="w-full h-full rounded-lg" />
-                <Skeleton className="w-full h-full rounded-lg" />
-            </div>
+      <div className="h-screen w-screen bg-background p-4 flex flex-col gap-4">
+        <Skeleton className="w-full h-20 rounded-lg" />
+        <div className="flex-grow grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Skeleton className="w-full h-full rounded-lg" />
+          <Skeleton className="w-full h-full rounded-lg" />
         </div>
+      </div>
     );
+  }
+
+  const self = gameState.players.find((p) => p.name === playerName);
+  const opponent = gameState.players.find((p) => p.name !== playerName);
+
+  if (!self || !opponent) {
+    return <div>Waiting for opponent...</div>;
   }
 
   return (
     <div className="h-screen w-screen bg-background p-4 flex flex-col gap-4">
       <BattleScoreboard
-        player1={{ name: player1Data.name, score: player1Data.testCases.filter(c => c === true).length }}
-        player2={{ name: player2Data.name, score: player2Data.testCases.filter(c => c === true).length }}
-        totalTests={player1Data.testCases.length}
+        player1={{ name: self.name, score: self.testCases.filter(c => c.passed).length }}
+        player2={{ name: opponent.name, score: opponent.testCases.filter(c => c.passed).length }}
+        totalTests={self.testCases.length}
       />
       <main className="flex-grow grid grid-cols-1 md:grid-cols-2 gap-4 min-h-0">
         <section className="bg-panel backdrop-blur-md border border-secondary/20 rounded-lg p-4 overflow-y-auto">
-           <PlayerPanel 
-             problem={problem}
-             playerData={player1Data}
-             onCodeChange={handleCodeChange}
-             onRunCode={handleRunCode}
-             onGetHint={handleGetHint}
-             isHintLoading={isHintLoading}
-             isCodeRunning={isCodeRunning}
-           />
+          <PlayerPanel
+            problem={gameState.problem}
+            playerData={{
+              code: playerCode,
+              testCases: self.testCases.map(tc => tc.passed),
+            }}
+            onCodeChange={handleCodeChange}
+            onRunCode={handleRunCode}
+            onGetHint={handleGetHint}
+            isHintLoading={isHintLoading}
+            isCodeRunning={isCodeRunning}
+          />
         </section>
         <section className="bg-panel backdrop-blur-md border border-secondary/20 rounded-lg p-4 overflow-y-auto hidden md:block">
-            <OpponentPanel playerData={player2Data} />
+          <OpponentPanel
+            playerData={{
+              name: opponent.name,
+              testCases: opponent.testCases.map(tc => tc.passed),
+            }}
+          />
         </section>
       </main>
-      <AIHintModal 
-        open={aiHint.isVisible}
-        onOpenChange={(open) => setAiHint(prev => ({...prev, isVisible: open}))}
-        hintText={aiHint.text}
+      <AIHintModal
+        open={!!hint}
+        onOpenChange={(open) => {
+          if (!open) clearHint();
+        }}
+        hintText={hint || ""}
         isLoading={isHintLoading}
       />
     </div>
