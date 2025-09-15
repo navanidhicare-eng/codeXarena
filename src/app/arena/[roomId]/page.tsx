@@ -21,7 +21,7 @@ import { DiceRollAnimation } from "@/components/DiceRollAnimation";
 type Language = "javascript" | "python" | "java" | "cpp";
 
 export default function ArenaView({ params }: { params: { roomId: string } }) {
-  const { roomId } = params;
+  const roomId = params.roomId;
   const router = useRouter();
   const {
     playerName,
