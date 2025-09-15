@@ -28,10 +28,11 @@ export default function ArenaView({ params }: { params: { roomId: string } }) {
   const [isCodeRunning, setIsCodeRunning] = useState(false);
 
   useEffect(() => {
-    if (!isConnected) {
+    // Redirect if we land here without a player name.
+    if (!playerName) {
       router.push("/");
     }
-  }, [isConnected, router]);
+  }, [playerName, router]);
   
   useEffect(() => {
     if (gameState?.problem?.starterCode) {
@@ -73,7 +74,13 @@ export default function ArenaView({ params }: { params: { roomId: string } }) {
   const opponent = gameState.players.find((p) => p.name !== playerName);
 
   if (!self || !opponent) {
-    return <div>Waiting for opponent...</div>;
+    return (
+      <div className="h-screen w-screen bg-background p-4 flex items-center justify-center">
+        <div className="text-center text-secondary font-headline text-2xl">
+          Waiting for opponent...
+        </div>
+      </div>
+    );
   }
 
   return (
