@@ -1,0 +1,195 @@
+"use client";
+
+import { useState, useRef, useEffect, FormEvent } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import Balancer from "react-wrap-balancer";
+import { Bot, Loader2, Send, Sparkles, User, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
+import {
+  getSupportChatMessage,
+  SupportChatMessage,
+} from "@/ai/flows/support-chat-flow";
+import { useToast } from "@/hooks/use-toast";
+
+type Message = {
+  id: string;
+  role: "user" | "assistant";
+  text: string;
+};
+
+export function Chatbot() {
+  const { toast } = useToast();
+  const [isOpen, setIsOpen] = useState(false);
+  const [input, setInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([
+    {
+      id: "initial-message",
+      role: "assistant",
+      text: "Hello! I'm your CodeVerse assistant. How can I help you navigate the app or solve any problems?",
+    },
+  ]);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+
+  const toggleChat = () => setIsOpen(!isOpen);
+
+  useEffect(() => {
+    if (isOpen && scrollAreaRef.current) {
+      setTimeout(() => {
+        const viewport = scrollAreaRef.current?.querySelector(
+          "[data-radix-scroll-area-viewport]"
+        );
+        if (viewport) {
+          viewport.scrollTop = viewport.scrollHeight;
+        }
+      }, 100);
+    }
+  }, [isOpen, messages]);
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!input.trim() || isLoading) return;
+
+    const userMessage: Message = {
+      id: `user-${Date.now()}`,
+      role: "user",
+      text: input,
+    };
+    setMessages((prev) => [...prev, userMessage]);
+    setInput("");
+    setIsLoading(true);
+
+    try {
+      const chatHistory: SupportChatMessage[] = messages.map((msg) => ({
+        role: msg.role,
+        content: msg.text,
+      }));
+
+      const result = await getSupportChatMessage({
+        message: input,
+        history: chatHistory,
+      });
+
+      const assistantMessage: Message = {
+        id: `assistant-${Date.now()}`,
+        role: "assistant",
+        text: result.response,
+      };
+      setMessages((prev) => [...prev, assistantMessage]);
+    } catch (error) {
+      console.error("Error getting chat response:", error);
+      toast({
+        variant: "destructive",
+        title: "Chatbot Error",
+        description: "Could not get a response. Please try again.",
+      });
+      // remove the user's message if there was an error
+      setMessages((prev) => prev.slice(0, prev.length - 1));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <>
+      <div className="fixed bottom-6 right-6 z-50">
+        <Button
+          onClick={toggleChat}
+          size="icon"
+          className="rounded-full w-14 h-14 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/30"
+        >
+          {isOpen ? (
+            <X className="w-6 h-6" />
+          ) : (
+            <Bot className="w-6 h-6" />
+          )}
+        </Button>
+      </div>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ duration: 0.2 }}
+            className="fixed bottom-24 right-6 z-50 w-full max-w-sm"
+          >
+            <div className="bg-panel backdrop-blur-xl border border-secondary/20 rounded-lg shadow-xl flex flex-col h-[60vh]">
+              <header className="p-4 border-b border-secondary/20 flex items-center gap-2">
+                <Sparkles className="text-secondary w-5 h-5" />
+                <h3 className="font-headline font-semibold text-foreground">
+                  CodeVerse Assistant
+                </h3>
+              </header>
+
+              <ScrollArea className="flex-grow p-4" ref={scrollAreaRef}>
+                <div className="flex flex-col gap-4">
+                  {messages.map((message) => (
+                    <div
+                      key={message.id}
+                      className={cn(
+                        "flex items-start gap-3",
+                        message.role === "user" && "justify-end"
+                      )}
+                    >
+                      {message.role === "assistant" && (
+                        <div className="w-8 h-8 rounded-full bg-secondary/20 flex items-center justify-center shrink-0">
+                          <Bot className="w-5 h-5 text-secondary" />
+                        </div>
+                      )}
+                      <div
+                        className={cn(
+                          "max-w-[80%] rounded-lg px-4 py-2 text-sm",
+                          message.role === "assistant"
+                            ? "bg-background/50 text-foreground/90"
+                            : "bg-primary text-primary-foreground"
+                        )}
+                      >
+                        <Balancer>{message.text}</Balancer>
+                      </div>
+                       {message.role === "user" && (
+                        <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+                          <User className="w-5 h-5 text-primary" />
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                  {isLoading && (
+                    <div className="flex items-start gap-3">
+                       <div className="w-8 h-8 rounded-full bg-secondary/20 flex items-center justify-center shrink-0">
+                          <Bot className="w-5 h-5 text-secondary" />
+                        </div>
+                      <div className="bg-background/50 rounded-lg px-4 py-3 flex items-center gap-2">
+                        <Loader2 className="w-4 h-4 animate-spin text-secondary" />
+                        <span className="text-sm text-muted-foreground">Thinking...</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </ScrollArea>
+
+              <footer className="p-4 border-t border-secondary/20">
+                <form onSubmit={handleSubmit} className="flex items-center gap-2">
+                  <Input
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    placeholder="Ask a question..."
+                    className="flex-grow bg-transparent border-secondary/50 focus-visible:ring-primary"
+                    disabled={isLoading}
+                  />
+                  <Button type="submit" size="icon" disabled={!input.trim() || isLoading}>
+                    <Send className="w-5 h-5" />
+                  </Button>
+                </form>
+              </footer>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
+  );
+}
