@@ -4,29 +4,12 @@
  * @fileOverview A chatbot for providing user support.
  *
  * - getSupportChatMessage - A function to get a response from the support chatbot.
- * - SupportChatInput - The input type for the getSupportChatMessage function.
- * - SupportChatOutput - The return type for the getSupportChatMessage function.
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'zod';
+import { SupportChatInputSchema, SupportChatOutputSchema } from '@/ai/schemas/support-chat-schemas';
+import type { SupportChatInput, SupportChatOutput } from '@/ai/schemas/support-chat-schemas';
 
-export const SupportChatMessageSchema = z.object({
-  role: z.enum(['user', 'assistant']),
-  content: z.string(),
-});
-export type SupportChatMessage = z.infer<typeof SupportChatMessageSchema>;
-
-const SupportChatInputSchema = z.object({
-  message: z.string().describe('The latest message from the user.'),
-  history: z.array(SupportChatMessageSchema).describe('The conversation history.'),
-});
-export type SupportChatInput = z.infer<typeof SupportChatInputSchema>;
-
-const SupportChatOutputSchema = z.object({
-  response: z.string().describe('The chatbot\'s response to the user.'),
-});
-export type SupportChatOutput = z.infer<typeof SupportChatOutputSchema>;
 
 export async function getSupportChatMessage(input: SupportChatInput): Promise<SupportChatOutput> {
   return supportChatFlow(input);

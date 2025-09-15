@@ -7,6 +7,7 @@ import { PlayerPanel } from "@/components/PlayerPanel";
 import { OpponentPanel } from "@/components/OpponentPanel";
 import { AIHintModal } from "@/components/AIHintModal";
 import { getAiHint } from "@/ai/flows/ai-hint-system";
+import type { AIHintOutput } from "@/ai/schemas/ai-hint-schemas";
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -25,7 +26,7 @@ export default function ArenaView() {
   const [problem, setProblem] = useState(mockProblem);
   const [player1Data, setPlayer1Data] = useState({ name: "DevA", code: problem.starterCode, testCases: [null, null, null] as (boolean | null)[] });
   const [player2Data, setPlayer2Data] = useState({ name: "DevB", testCases: [null, null, null] as (boolean | null)[] });
-  const [aiHint, setAiHint] = useState({ text: "", isVisible: false });
+  const [aiHint, setAiHint] = useState<{text: string, isVisible: boolean}>({ text: "", isVisible: false });
   const [isHintLoading, setIsHintLoading] = useState(false);
   const [isCodeRunning, setIsCodeRunning] = useState(false);
 
@@ -62,7 +63,7 @@ export default function ArenaView() {
     setIsHintLoading(true);
     setAiHint({ text: "", isVisible: true });
     try {
-        const hintResult = await getAiHint({
+        const hintResult: AIHintOutput = await getAiHint({
             problemTitle: problem.title,
             problemDescription: problem.description,
             code: player1Data.code,
@@ -98,7 +99,7 @@ export default function ArenaView() {
       <BattleScoreboard
         player1={{ name: player1Data.name, score: player1Data.testCases.filter(c => c === true).length }}
         player2={{ name: player2Data.name, score: player2Data.testCases.filter(c => c === true).length }}
-        totalTests={problem.starterCode.length}
+        totalTests={player1Data.testCases.length}
       />
       <main className="flex-grow grid grid-cols-1 md:grid-cols-2 gap-4 min-h-0">
         <section className="bg-panel backdrop-blur-md border border-secondary/20 rounded-lg p-4 overflow-y-auto">

@@ -10,8 +10,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import {
   getSupportChatMessage,
-  SupportChatMessage,
 } from "@/ai/flows/support-chat-flow";
+import type { SupportChatMessage } from '@/ai/schemas/support-chat-schemas';
 import { useToast } from "@/hooks/use-toast";
 
 type Message = {

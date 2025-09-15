@@ -4,26 +4,11 @@
  * @fileOverview AI Hint System for providing coding assistance to players.
  *
  * - getAiHint - A function to retrieve an AI hint for a given problem and code.
- * - AIHintInput - The input type for the getAiHint function.
- * - AIHintOutput - The return type for the getAiHint function.
  */
 
 import { ai } from '@/ai/genkit';
-import { z } from 'zod';
-
-const AIHintInputSchema = z.object({
-  problemTitle: z.string().describe('The title of the coding problem.'),
-  problemDescription: z.string().describe('The description of the coding problem.'),
-  code: z.string().describe('The current code written by the player.'),
-});
-
-export type AIHintInput = z.infer<typeof AIHintInputSchema>;
-
-const AIHintOutputSchema = z.object({
-  text: z.string().describe('The AI hint to display to the player.'),
-});
-
-export type AIHintOutput = z.infer<typeof AIHintOutputSchema>;
+import { AIHintInputSchema, AIHintOutputSchema } from '@/ai/schemas/ai-hint-schemas';
+import type { AIHintInput, AIHintOutput } from '@/ai/schemas/ai-hint-schemas';
 
 export async function getAiHint(input: AIHintInput): Promise<AIHintOutput> {
   return aiHintFlow(input);
