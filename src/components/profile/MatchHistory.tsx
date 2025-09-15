@@ -3,26 +3,44 @@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
+import { formatDistanceToNow } from 'date-fns';
+import { useState, useEffect } from "react";
+
 
 type Match = {
   id: string;
   outcome: "Victory" | "Defeat";
   problemTitle: string;
   opponent: string;
-  timestamp: string;
+  timestamp: string; // ISO date string
 };
 
 type MatchHistoryProps = {
   matches: Match[];
 };
 
+type FormattedMatch = Omit<Match, 'timestamp'> & {
+    formattedTimestamp: string;
+}
+
 export function MatchHistory({ matches }: MatchHistoryProps) {
+  const [formattedMatches, setFormattedMatches] = useState<FormattedMatch[]>([]);
+
+  useEffect(() => {
+    setFormattedMatches(
+      matches.map(match => ({
+        ...match,
+        formattedTimestamp: formatDistanceToNow(new Date(match.timestamp), { addSuffix: true }),
+      }))
+    );
+  }, [matches]);
+
   return (
     <div className="bg-panel backdrop-blur-md border border-secondary/20 rounded-lg p-2 h-96">
       <ScrollArea className="h-full w-full">
         <div className="p-4">
             <ul className="space-y-4">
-            {matches.map((match, index) => (
+            {formattedMatches.map((match, index) => (
                 <motion.li
                     key={match.id}
                     initial={{ opacity: 0, x: -50 }}
@@ -42,7 +60,7 @@ export function MatchHistory({ matches }: MatchHistoryProps) {
                         </div>
                         <div className="text-right">
                             <p className="text-sm text-muted-foreground">vs {match.opponent}</p>
-                            <p className="text-xs text-muted-foreground/70">{match.timestamp}</p>
+                            <p className="text-xs text-muted-foreground/70">{match.formattedTimestamp}</p>
                         </div>
                     </div>
                 </motion.li>

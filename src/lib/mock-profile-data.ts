@@ -1,4 +1,4 @@
-import { Percent, Swords, Flame, Code } from 'lucide-react';
+import { sub } from 'date-fns';
 
 export const mockProfileData = {
   avatarUrl: 'https://picsum.photos/seed/player1/200/200',
@@ -99,41 +99,41 @@ export const mockMatchHistory = [
     outcome: 'Victory',
     problemTitle: 'Two Sum',
     opponent: 'CodeCrusher',
-    timestamp: '3 hours ago',
+    timestamp: sub(new Date(), { hours: 3 }).toISOString(),
   },
   {
     id: 'match2',
     outcome: 'Victory',
     problemTitle: 'Valid Parentheses',
     opponent: 'LogicLord',
-    timestamp: '1 day ago',
+    timestamp: sub(new Date(), { days: 1 }).toISOString(),
   },
   {
     id: 'match3',
     outcome: 'Defeat',
     problemTitle: 'Merge K Sorted Lists',
     opponent: 'AlgoQueen',
-    timestamp: '2 days ago',
+    timestamp: sub(new Date(), { days: 2 }).toISOString(),
   },
   {
     id: 'match4',
     outcome: 'Victory',
     problemTitle: 'Reverse Linked List',
     opponent: 'ByteBard',
-    timestamp: '2 days ago',
+    timestamp: sub(new Date(), { days: 2, hours: 4 }).toISOString(),
   },
    {
     id: 'match5',
     outcome: 'Victory',
     problemTitle: 'FizzBuzz',
     opponent: 'ScriptKid',
-    timestamp: '4 days ago',
+    timestamp: sub(new Date(), { days: 4 }).toISOString(),
   },
    {
     id: 'match6',
     outcome: 'Victory',
     problemTitle: 'Is Palindrome',
     opponent: 'CodeCrusher',
-    timestamp: '5 days ago',
+    timestamp: sub(new Date(), { days: 5 }).toISOString(),
   },
 ];
