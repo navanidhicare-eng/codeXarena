@@ -92,43 +92,33 @@ const joinMatchmaking = () => {
     }, 2000);
 };
 
-// --- New Room-based events ---
-const createRoom = (options: { isPrivate: boolean, password?: string, playerName: string }) => {
-    const roomId = `room-${Math.random().toString(36).substring(2, 8)}`;
-    rooms[roomId] = {
-        players: [options.playerName],
-        admin: options.playerName,
-        isPrivate: options.isPrivate,
-        password: options.password,
-        problem: {
-            title: 'Random Problem',
-            description: 'This is a randomly selected problem for your custom room.',
-        },
-    };
-    console.log(`Room created: ${roomId}`, rooms[roomId]);
-    if (onRoomCreatedCallback) {
-        onRoomCreatedCallback({ roomId });
-    }
-};
+const emitCreateRoom = (options: any) => {
+    console.log('emitCreateRoom called with options:', options);
+    setTimeout(() => {
+        if(onRoomCreatedCallback) {
+            onRoomCreatedCallback({ roomId: 'AX-7B-WQ' });
+        }
+    }, 1000);
+}
 
-const joinRoom = (options: { roomId: string, password?: string, playerName: string }) => {
-    const room = rooms[options.roomId];
-    if (!room) {
-        if (onRoomJoinFailedCallback) onRoomJoinFailedCallback({ error: "Room not found." });
-        return;
-    }
-    if (room.isPrivate && room.password !== options.password) {
-        if (onRoomJoinFailedCallback) onRoomJoinFailedCallback({ error: "Invalid password." });
-        return;
-    }
-    room.players.push(options.playerName);
-    console.log(`${options.playerName} joined ${options.roomId}. Players:`, room.players);
-    if (onRoomUpdatedCallback) {
-        // In a real scenario, you'd emit to all clients in the room.
-        // Here we just fire the callback for the current client.
-        onRoomUpdatedCallback({ players: room.players });
-    }
-};
+const emitJoinRoom = (roomId: string) => {
+    console.log('emitJoinRoom called for room:', roomId);
+     setTimeout(() => {
+        mockGameState.players.push({
+            name: 'BotFriend',
+            score: 0,
+            testCases: [
+                { name: 'Test Case 1', passed: null },
+                { name: 'Test Case 2', passed: null },
+                { name: 'Test Case 3', passed: null },
+                { name: 'Test Case 4', passed: null },
+            ]
+        });
+        if (onStateUpdateCallback) {
+            onStateUpdateCallback({ ...mockGameState });
+        }
+    }, 2000);
+}
 
 
 const emitRunCode = (code: string) => {
@@ -227,8 +217,8 @@ const mockSocketService = {
   // Quick Match
   joinMatchmaking,
   // Custom Rooms
-  createRoom,
-  joinRoom,
+  emitCreateRoom,
+  emitJoinRoom,
   // In-Game
   emitRunCode,
   emitGetHint,

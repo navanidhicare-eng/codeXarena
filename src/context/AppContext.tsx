@@ -38,6 +38,8 @@ interface AppContextType {
     isHintLoading: boolean;
     opponentEmoji: string | null;
     connectAndJoin: (name: string) => void;
+    createRoom: (options: any) => void;
+    joinRoom: (roomId: string) => void;
     emitRunCode: (code: string) => void;
     emitGetHint: () => void;
     clearHint: () => void;
@@ -52,6 +54,8 @@ export const AppContext = createContext<AppContextType>({
     isHintLoading: false,
     opponentEmoji: null,
     connectAndJoin: () => {},
+    createRoom: () => {},
+    joinRoom: () => {},
     emitRunCode: () => {},
     emitGetHint: () => {},
     clearHint: () => {},
@@ -72,6 +76,16 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         mockSocketService.connect(name);
         mockSocketService.joinMatchmaking();
     };
+
+    const createRoom = (options: any) => {
+        setPlayerName(options.playerName);
+        mockSocketService.connect(options.playerName);
+        mockSocketService.emitCreateRoom(options);
+    }
+
+    const joinRoom = (roomId: string) => {
+        mockSocketService.emitJoinRoom(roomId);
+    }
     
     const emitRunCode = (code: string) => {
         mockSocketService.emitRunCode(code);
@@ -91,6 +105,11 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
     };
 
     useEffect(() => {
+        mockSocketService.onRoomCreated(({ roomId }) => {
+            console.log('Room created, navigating to:', roomId);
+            router.push(`/room/${roomId}`);
+        });
+        
         mockSocketService.onMatchFound((newGameState: Omit<GameState, 'matchId'>) => {
             console.log("Match found, updating state:", newGameState);
             const matchId = `mock-room-${Math.random().toString(36).substring(7)}`;
@@ -114,7 +133,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
             setIsHintLoading(false);
         });
 
-        mockSocketService.onHintError((error: { error: string }) => {
+        mockSocket_service.onHintError((error: { error: string }) => {
             console.error(error.error);
             setIsHintLoading(false);
         });
@@ -136,6 +155,8 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
             isHintLoading,
             opponentEmoji,
             connectAndJoin,
+            createRoom,
+            joinRoom,
             emitRunCode,
             emitGetHint,
             clearHint,
