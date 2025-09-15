@@ -15,8 +15,7 @@ const QRCode = ({ text }: { text: string }) => {
 };
 
 
-export default function RoomWaitingPage({ params }: { params: { roomId: string } }) {
-  const { roomId } = params;
+export default function RoomWaitingPage({ params: { roomId } }: { params: { roomId: string } }) {
   const { playerName, gameState } = useContext(AppContext);
   const { toast } = useToast();
 
