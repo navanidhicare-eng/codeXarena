@@ -87,42 +87,55 @@ export default function AuthPage() {
         <div className="min-h-screen w-full bg-background grid grid-cols-1 md:grid-cols-2">
             <div className="relative flex-col items-center justify-center hidden md:flex">
                 <Image
-                    src="https://picsum.photos/seed/code-arena/1200/1800"
+                    src="https://picsum.photos/seed/future-ui/1200/1800"
                     alt="CodeVerse Arena"
-                    layout="fill"
+                    fill
                     objectFit="cover"
                     className="opacity-20"
                     data-ai-hint="futuristic abstract"
                 />
-                <div className="relative z-10 bg-black/30 backdrop-blur-sm p-8 rounded-xl border border-primary/20 shadow-2xl shadow-primary/20">
+                <motion.div 
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.5 }}
+                    className="relative z-10 bg-black/30 backdrop-blur-sm p-8 rounded-xl border border-primary/20 shadow-2xl shadow-primary/20"
+                >
                     <h1 className="font-headline font-bold text-6xl bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text" style={{ textShadow: '0 0 15px hsla(var(--primary), 0.5)' }}>
                         CodeVerse
                     </h1>
                     <p className="font-headline text-secondary text-xl mt-2">
                         Stop Grinding. Start Battling.
                     </p>
-                </div>
+                </motion.div>
             </div>
 
             <div className="flex items-center justify-center p-4 sm:p-8">
-                <div className="w-full max-w-md">
+                <motion.div 
+                    initial={{ opacity: 0, y: 50 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.2 }}
+                    className="w-full max-w-md"
+                >
                     <Tabs defaultValue="login" className="w-full" onValueChange={setView}>
                         <h2 className="text-3xl font-bold font-headline text-center text-foreground mb-2">
                             {view === "login" ? "Welcome Back" : "Join the Battle"}
                         </h2>
+                        <p className="text-center text-muted-foreground mb-6">
+                            {view === 'login' ? 'Sign in to continue your journey.' : 'Create an account to start competing.'}
+                        </p>
                         <TabsList className="grid w-full grid-cols-2 mb-6">
                             <TabsTrigger value="login">Login</TabsTrigger>
                             <TabsTrigger value="register">Register</TabsTrigger>
                         </TabsList>
                         
                         <div className="space-y-4 mb-6">
-                            <Button variant="outline" className="w-full h-12 text-base">
+                            <Button variant="outline" className="w-full h-12 text-base border-border hover:bg-accent/50 hover:border-primary/50 transition-all duration-300 transform hover:scale-105">
                                 <GoogleIcon /> Continue with Google
                             </Button>
-                            <Button variant="outline" className="w-full h-12 text-base">
+                            <Button variant="outline" className="w-full h-12 text-base border-border hover:bg-accent/50 hover:border-primary/50 transition-all duration-300 transform hover:scale-105">
                                 <Github /> Continue with Github
                             </Button>
-                            <Button variant="outline" className="w-full h-12 text-base">
+                            <Button variant="outline" className="w-full h-12 text-base border-border hover:bg-accent/50 hover:border-primary/50 transition-all duration-300 transform hover:scale-105">
                                 <AppleIcon /> Continue with Apple
                             </Button>
                         </div>
@@ -172,8 +185,9 @@ export default function AuthPage() {
                             </motion.div>
                         </AnimatePresence>
                     </Tabs>
-                </div>
+                </motion.div>
             </div>
         </div>
     );
 }
+
