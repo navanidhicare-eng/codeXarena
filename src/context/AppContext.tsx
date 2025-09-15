@@ -4,6 +4,12 @@ import React, { createContext, useState, useCallback, useEffect, ReactNode } fro
 import { useRouter } from 'next/navigation';
 import mockSocketService from '@/services/mockSocketService';
 
+type Language = "javascript" | "python" | "java" | "cpp";
+
+type StarterCode = {
+    [key in Language]: string;
+}
+
 // Define types for the state
 type PlayerState = {
     name: string;
@@ -14,7 +20,7 @@ type PlayerState = {
 type ProblemState = {
     title: string;
     description: string;
-    starterCode: string;
+    starterCode: StarterCode;
 };
 
 type GameState = {
@@ -30,10 +36,12 @@ interface AppContextType {
     winner: string | null;
     hint: string | null;
     isHintLoading: boolean;
+    opponentEmoji: string | null;
     connectAndJoin: (name: string) => void;
     emitRunCode: (code: string) => void;
     emitGetHint: () => void;
     clearHint: () => void;
+    sendEmoji: (emoji: string) => void;
 }
 
 export const AppContext = createContext<AppContextType>({
@@ -42,10 +50,12 @@ export const AppContext = createContext<AppContextType>({
     winner: null,
     hint: null,
     isHintLoading: false,
+    opponentEmoji: null,
     connectAndJoin: () => {},
     emitRunCode: () => {},
     emitGetHint: () => {},
     clearHint: () => {},
+    sendEmoji: () => {},
 });
 
 export const AppContextProvider = ({ children }: { children: ReactNode }) => {
@@ -54,6 +64,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
     const [winner, setWinner] = useState<string | null>(null);
     const [hint, setHint] = useState<string | null>(null);
     const [isHintLoading, setIsHintLoading] = useState(false);
+    const [opponentEmoji, setOpponentEmoji] = useState<string | null>(null);
     const router = useRouter();
 
     const connectAndJoin = (name: string) => {
@@ -73,6 +84,10 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
     
     const clearHint = () => {
         setHint(null);
+    };
+
+    const sendEmoji = (emoji: string) => {
+        mockSocketService.emitSendEmoji(emoji);
     };
 
     useEffect(() => {
@@ -104,6 +119,12 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
             setIsHintLoading(false);
         });
 
+        mockSocketService.onEmojiReceive((data: { emoji: string }) => {
+            console.log('Emoji received:', data.emoji);
+            setOpponentEmoji(data.emoji);
+            setTimeout(() => setOpponentEmoji(null), 2000);
+        });
+
     }, [router]);
 
     return (
@@ -113,10 +134,12 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
             winner,
             hint,
             isHintLoading,
+            opponentEmoji,
             connectAndJoin,
             emitRunCode,
             emitGetHint,
             clearHint,
+            sendEmoji,
         }}>
             {children}
         </AppContext.Provider>
