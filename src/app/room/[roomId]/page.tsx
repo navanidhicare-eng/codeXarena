@@ -25,7 +25,7 @@ export default function RoomWaitingPage({ params }: { params: { roomId: string }
   // Mock effect for players joining
   useEffect(() => {
     const interval = setInterval(() => {
-      if (players.length < 4) {
+      if (players.length < 2) {
         setPlayers(prev => [...prev, `Player_${Math.floor(Math.random() * 100)}`]);
       }
     }, 3000);
@@ -54,7 +54,7 @@ export default function RoomWaitingPage({ params }: { params: { roomId: string }
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl">
         {/* Left Panel: Info */}
         <div className="bg-panel backdrop-blur-md border border-primary/20 rounded-lg p-6 flex flex-col items-center justify-center text-center">
-          <h2 className="text-2xl font-headline text-secondary mb-4">Invite Your Opponents</h2>
+          <h2 className="text-2xl font-headline text-secondary mb-4">Invite Your Opponent</h2>
            <div className="mb-6">
              <QRCode text={fullRoomUrl} />
           </div>
@@ -71,7 +71,7 @@ export default function RoomWaitingPage({ params }: { params: { roomId: string }
         <div className="bg-panel backdrop-blur-md border border-secondary/20 rounded-lg p-6">
           <h2 className="text-2xl font-headline text-secondary mb-4 flex items-center gap-2">
             <Users className="w-6 h-6"/>
-            Players in Room ({players.length}/4)
+            Players in Room ({players.length}/2)
           </h2>
           <div className="space-y-3">
             {players.map((player, index) => (
