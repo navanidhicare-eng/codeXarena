@@ -12,11 +12,13 @@ export default {
       fontFamily: {
         body: ['Inter', 'sans-serif'],
         headline: ['Inter', 'sans-serif'],
-        code: ['monospace'],
+        code: ['Roboto Mono', 'monospace'],
       },
       colors: {
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
+        panel: 'rgba(22, 27, 34, 0.75)',
+        success: 'hsl(var(--success))',
         card: {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
@@ -71,6 +73,10 @@ export default {
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',
       },
+      boxShadow: {
+        'primary-glow': '0 0 15px rgba(224, 17, 95, 0.8)',
+        'success-glow': '0 0 15px rgba(57, 255, 20, 0.8)',
+      },
       keyframes: {
         'accordion-down': {
           from: {
@@ -92,6 +98,7 @@ export default {
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
+        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
       },
     },
   },
