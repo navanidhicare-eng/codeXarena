@@ -133,7 +133,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
             setIsHintLoading(false);
         });
 
-        mockSocket_service.onHintError((error: { error: string }) => {
+        mockSocketService.onHintError((error: { error: string }) => {
             console.error(error.error);
             setIsHintLoading(false);
         });
