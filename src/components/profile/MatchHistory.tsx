@@ -35,6 +35,21 @@ export function MatchHistory({ matches }: MatchHistoryProps) {
     );
   }, [matches]);
 
+  if (!formattedMatches.length) {
+    // Render a loading state or nothing until the client-side effect runs
+    return (
+        <div className="bg-panel backdrop-blur-md border border-secondary/20 rounded-lg p-2 h-96">
+          <ScrollArea className="h-full w-full">
+            <div className="p-4 space-y-4">
+                {Array.from({ length: 6 }).map((_, index) => (
+                    <div key={index} className="bg-background/50 border border-border rounded-lg p-4 h-[78px] animate-pulse" />
+                ))}
+            </div>
+          </ScrollArea>
+        </div>
+    );
+  }
+
   return (
     <div className="bg-panel backdrop-blur-md border border-secondary/20 rounded-lg p-2 h-96">
       <ScrollArea className="h-full w-full">
