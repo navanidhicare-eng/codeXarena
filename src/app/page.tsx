@@ -1,11 +1,13 @@
+
 "use client";
 
 import { useState, useContext } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2 } from "lucide-react";
+import { Loader2, User } from "lucide-react";
 import { AppContext } from "@/context/AppContext";
+import Link from "next/link";
 
 export default function LandingPage() {
   const [playerNameInput, setPlayerNameInput] = useState("");
@@ -23,7 +25,16 @@ export default function LandingPage() {
   };
 
   return (
-    <main className="h-screen w-screen flex flex-col items-center justify-center bg-background text-foreground p-4 overflow-hidden">
+    <main className="h-screen w-screen flex flex-col items-center justify-center bg-background text-foreground p-4 overflow-hidden relative">
+       <div className="absolute top-6 right-6">
+        <Button asChild variant="outline" size="icon" className="rounded-full h-12 w-12 border-primary/50 hover:bg-primary/10">
+          <Link href="/profile">
+            <User className="h-6 w-6 text-primary" />
+            <span className="sr-only">Profile</span>
+          </Link>
+        </Button>
+      </div>
+
       <div className="text-center">
         <h1 className="font-headline font-bold text-7xl md:text-8xl bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text animate-pulse-slow">
           CodeVerse
