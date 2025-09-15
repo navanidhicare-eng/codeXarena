@@ -3,11 +3,13 @@
 
 import Image from "next/image";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Github, Loader2 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useToast } from "@/hooks/use-toast";
 
 const GoogleIcon = () => (
     <svg className="h-5 w-5" viewBox="0 0 24 24">
@@ -70,6 +72,13 @@ export default function AuthPage() {
     const [password, setPassword] = useState("");
     const [passwordStrength, setPasswordStrength] = useState(0);
 
+    const [loginEmail, setLoginEmail] = useState("");
+    const [loginPassword, setLoginPassword] = useState("");
+    const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+    const router = useRouter();
+    const { toast } = useToast();
+
     const checkPasswordStrength = (pass: string) => {
         let strength = 0;
         if (pass.length > 7) strength++;
@@ -77,10 +86,31 @@ export default function AuthPage() {
         if (pass.match(/[A-Z]+/)) strength++;
         if (pass.match(/[0-9]+/)) strength++;
         if (pass.match(/[$@#&!]+/)) strength++;
-        // Simple strength check, can be improved
         if (strength > 4) strength = 4;
         setPassword(pass);
         setPasswordStrength(strength);
+    };
+
+    const handleLogin = (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsLoggingIn(true);
+
+        setTimeout(() => {
+            if (loginEmail === 'admin@gmail.com' && loginPassword === 'admin') {
+                toast({
+                    title: "Login Successful",
+                    description: "Welcome back, admin!",
+                });
+                router.push('/home');
+            } else {
+                toast({
+                    variant: "destructive",
+                    title: "Login Failed",
+                    description: "Invalid email or password.",
+                });
+                setIsLoggingIn(false);
+            }
+        }, 1000);
     };
     
     return (
@@ -155,13 +185,29 @@ export default function AuthPage() {
                                 transition={{ duration: 0.2 }}
                             >
                                 <TabsContent value="login">
-                                    <form className="space-y-4">
-                                        <Input type="email" placeholder="Email" required className="h-12"/>
-                                        <Input type="password" placeholder="Password" required className="h-12"/>
+                                    <form className="space-y-4" onSubmit={handleLogin}>
+                                        <Input 
+                                            type="email" 
+                                            placeholder="Email" 
+                                            required 
+                                            className="h-12"
+                                            value={loginEmail}
+                                            onChange={(e) => setLoginEmail(e.target.value)}
+                                        />
+                                        <Input 
+                                            type="password" 
+                                            placeholder="Password" 
+                                            required 
+                                            className="h-12"
+                                            value={loginPassword}
+                                            onChange={(e) => setLoginPassword(e.target.value)}
+                                        />
                                         <div className="text-right">
                                             <Button variant="link" className="text-muted-foreground p-0 h-auto">Forgot Password?</Button>
                                         </div>
-                                        <Button type="submit" className="w-full h-14 text-lg font-bold">Login</Button>
+                                        <Button type="submit" className="w-full h-14 text-lg font-bold" disabled={isLoggingIn}>
+                                            {isLoggingIn ? <Loader2 className="animate-spin" /> : "Login"}
+                                        </Button>
                                     </form>
                                 </TabsContent>
                                 <TabsContent value="register">
