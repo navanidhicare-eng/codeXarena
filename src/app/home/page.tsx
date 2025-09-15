@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useContext } from "react";
@@ -76,7 +75,7 @@ export default function HomePage() {
 
 
   return (
-    <main className="h-screen w-screen flex flex-col items-center justify-center bg-background text-foreground p-4 overflow-hidden relative">
+    <main className="min-h-screen w-full flex flex-col items-center justify-start bg-background text-foreground p-4 relative">
        <div className="absolute top-6 right-6">
         <Button asChild variant="outline" size="icon" className="rounded-full h-12 w-12 border-primary/50 hover:bg-primary/10">
           <Link href="/profile">
@@ -86,57 +85,68 @@ export default function HomePage() {
         </Button>
       </div>
 
-        <div className="flex flex-col items-center justify-center gap-8 w-full">
-            <LeaderboardView />
+      <div className="w-full flex flex-col items-center justify-center gap-8 pt-20 md:pt-28">
+        <div className="text-center">
+             <h1 className="font-headline font-bold text-6xl bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text" style={{ textShadow: '0 0 15px hsla(var(--primary), 0.5)' }}>
+                CodeVerse
+            </h1>
+            <p className="font-headline text-secondary text-xl mt-2">
+                Stop Grinding. Start Battling.
+            </p>
+        </div>
 
-            <div className="w-full max-w-sm flex flex-col gap-4">
-                <Input
-                type="text"
-                placeholder="Enter your gladiator name to play"
-                value={playerNameInput}
-                onChange={(e) => setPlayerNameInput(e.target.value)}
-                className="h-14 text-lg text-center bg-transparent border-2 border-secondary/50 rounded-lg transition-all duration-300 focus:border-primary focus-visible:ring-0 focus:scale-105"
-                disabled={isLoading}
-                />
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <Button
-                    onClick={handleQuickMatch}
-                    disabled={!playerNameInput.trim() || isLoading}
-                    className="h-14 text-lg font-bold transition-all duration-300 bg-primary hover:bg-primary/80 hover:shadow-primary-glow disabled:bg-muted disabled:shadow-none disabled:cursor-not-allowed col-span-1 md:col-span-3"
-                    >
-                    {isLoading ? (
-                        <>
-                        <Loader2 className="mr-2 h-6 w-6 animate-spin" />
-                        Entering the Arena...
-                        </>
-                    ) : (
-                        <>
-                        <Swords className="mr-2 h-6 w-6" />
-                        Quick Match
-                        </>
-                    )}
-                    </Button>
-                    <Button
-                    onClick={handleCreateRoom}
-                    disabled={!playerNameInput.trim()}
-                    variant="outline"
-                    className="h-14 text-lg font-bold border-secondary/50 hover:bg-secondary/10 hover:text-secondary disabled:bg-muted/20 disabled:text-muted-foreground disabled:border-muted"
-                    >
-                    <Plus className="mr-2 h-6 w-6" />
-                    Create
-                    </Button>
-                    <Button
-                    onClick={handleJoinRoom}
-                    disabled={!playerNameInput.trim()}
-                    variant="outline"
-                    className="h-14 text-lg font-bold border-primary/50 hover:bg-primary/10 hover:text-primary col-span-2 disabled:bg-muted/20 disabled:text-muted-foreground disabled:border-muted"
-                    >
-                    <LogIn className="mr-2 h-6 w-6" />
-                    Join Room
-                    </Button>
-                </div>
+        <div className="w-full max-w-sm flex flex-col gap-4">
+            <Input
+            type="text"
+            placeholder="Enter your gladiator name to play"
+            value={playerNameInput}
+            onChange={(e) => setPlayerNameInput(e.target.value)}
+            className="h-14 text-lg text-center bg-transparent border-2 border-secondary/50 rounded-lg transition-all duration-300 focus:border-primary focus-visible:ring-0 focus:scale-105"
+            disabled={isLoading}
+            />
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Button
+                onClick={handleQuickMatch}
+                disabled={!playerNameInput.trim() || isLoading}
+                className="h-14 text-lg font-bold transition-all duration-300 bg-primary hover:bg-primary/80 hover:shadow-primary-glow disabled:bg-muted disabled:shadow-none disabled:cursor-not-allowed col-span-1 md:col-span-3"
+                >
+                {isLoading ? (
+                    <>
+                    <Loader2 className="mr-2 h-6 w-6 animate-spin" />
+                    Entering the Arena...
+                    </>
+                ) : (
+                    <>
+                    <Swords className="mr-2 h-6 w-6" />
+                    Quick Match
+                    </>
+                )}
+                </Button>
+                <Button
+                onClick={handleCreateRoom}
+                disabled={!playerNameInput.trim()}
+                variant="outline"
+                className="h-14 text-lg font-bold border-secondary/50 hover:bg-secondary/10 hover:text-secondary disabled:bg-muted/20 disabled:text-muted-foreground disabled:border-muted"
+                >
+                <Plus className="mr-2 h-6 w-6" />
+                Create
+                </Button>
+                <Button
+                onClick={handleJoinRoom}
+                disabled={!playerNameInput.trim()}
+                variant="outline"
+                className="h-14 text-lg font-bold border-primary/50 hover:bg-primary/10 hover:text-primary col-span-2 disabled:bg-muted/20 disabled:text-muted-foreground disabled:border-muted"
+                >
+                <LogIn className="mr-2 h-6 w-6" />
+                Join Room
+                </Button>
             </div>
         </div>
+
+        <div className="w-full max-w-4xl mt-12">
+            <LeaderboardView />
+        </div>
+    </div>
       
       {/* Create Room Modal */}
       <Dialog open={showCreateRoomModal} onOpenChange={setShowCreateRoomModal}>
