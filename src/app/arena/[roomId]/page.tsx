@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useContext } from "react";
@@ -20,6 +21,7 @@ import { DiceRollAnimation } from "@/components/DiceRollAnimation";
 type Language = "javascript" | "python" | "java" | "cpp";
 
 export default function ArenaView({ params }: { params: { roomId: string } }) {
+  const { roomId } = params;
   const router = useRouter();
   const {
     playerName,
