@@ -1,10 +1,16 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { TestCasesPanel } from "@/components/TestCasesPanel";
-import { Lightbulb, Loader2, Play } from "lucide-react";
+import { Lightbulb, Loader2, Play, Code } from "lucide-react";
 
 type PlayerPanelProps = {
   problem: {
@@ -33,20 +39,30 @@ export function PlayerPanel({
 }: PlayerPanelProps) {
   return (
     <div className="h-full flex flex-col gap-4">
-      <div className="flex-shrink-0">
-        <h2 className="text-2xl font-bold font-headline text-secondary">{problem.title}</h2>
+      <div className="flex-shrink-0 flex justify-between items-center">
+        <div className="flex items-center gap-2">
+            <Code className="h-6 w-6 text-primary"/>
+            <h2 className="text-xl font-bold font-headline text-primary">Your Code</h2>
+        </div>
+        <Select defaultValue="javascript">
+          <SelectTrigger className="w-[180px] bg-transparent border-primary/50">
+            <SelectValue placeholder="Select Language" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="javascript">JavaScript</SelectItem>
+            <SelectItem value="python">Python</SelectItem>
+            <SelectItem value="java">Java</SelectItem>
+            <SelectItem value="cpp">C++</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
-
-      <ScrollArea className="flex-shrink-0 h-40 border border-secondary/20 rounded-lg p-4 bg-background/50">
-        <p className="text-foreground/80 whitespace-pre-wrap">{problem.description}</p>
-      </ScrollArea>
       
       <div className="flex-grow flex flex-col">
         <Textarea
           value={playerData.code}
           onChange={(e) => onCodeChange(e.target.value)}
           placeholder="Your code goes here..."
-          className="w-full h-full flex-grow font-code bg-transparent border-2 border-secondary/50 rounded-lg focus:border-primary focus-visible:ring-0 resize-none"
+          className="w-full h-full flex-grow font-code bg-transparent border-2 border-primary/50 rounded-lg focus:border-primary focus-visible:ring-0 resize-none text-base"
         />
       </div>
 

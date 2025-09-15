@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useContext, useEffect } from "react";
+import { useState, useContext } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,13 +11,7 @@ export default function LandingPage() {
   const [playerNameInput, setPlayerNameInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const { connectAndJoin, gameState } = useContext(AppContext);
-
-  useEffect(() => {
-    if (gameState?.matchId) {
-      router.push(`/arena/${gameState.matchId}`);
-    }
-  }, [gameState, router]);
+  const { connectAndJoin } = useContext(AppContext);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -25,6 +19,7 @@ export default function LandingPage() {
 
     setIsLoading(true);
     connectAndJoin(playerNameInput.trim());
+    router.push('/matchmaking');
   };
 
   return (
@@ -55,7 +50,7 @@ export default function LandingPage() {
           {isLoading ? (
             <>
               <Loader2 className="mr-2 h-6 w-6 animate-spin" />
-              Finding Match...
+              Entering the Arena...
             </>
           ) : (
             "Find 1v1 Match"

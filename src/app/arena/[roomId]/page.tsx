@@ -90,7 +90,16 @@ export default function ArenaView({ params }: { params: { roomId: string } }) {
         totalTests={self.testCases.length}
       />
       <main className="flex-grow grid grid-cols-1 md:grid-cols-2 gap-4 min-h-0">
-        <section className="bg-panel backdrop-blur-md border border-secondary/20 rounded-lg p-4 overflow-y-auto">
+        <section className="bg-panel backdrop-blur-md border border-secondary/20 rounded-lg p-4 overflow-y-auto hidden md:block">
+          <OpponentPanel
+            playerData={{
+              name: opponent.name,
+              testCases: opponent.testCases.map(tc => tc.passed),
+            }}
+             problem={gameState.problem}
+          />
+        </section>
+        <section className="bg-panel backdrop-blur-md border border-primary/20 rounded-lg p-4 overflow-y-auto">
           <PlayerPanel
             problem={gameState.problem}
             playerData={{
@@ -102,14 +111,6 @@ export default function ArenaView({ params }: { params: { roomId: string } }) {
             onGetHint={handleGetHint}
             isHintLoading={isHintLoading}
             isCodeRunning={isCodeRunning}
-          />
-        </section>
-        <section className="bg-panel backdrop-blur-md border border-secondary/20 rounded-lg p-4 overflow-y-auto hidden md:block">
-          <OpponentPanel
-            playerData={{
-              name: opponent.name,
-              testCases: opponent.testCases.map(tc => tc.passed),
-            }}
           />
         </section>
       </main>

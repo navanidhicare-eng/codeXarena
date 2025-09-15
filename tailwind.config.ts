@@ -17,7 +17,7 @@ export default {
       colors: {
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
-        panel: 'rgba(22, 27, 34, 0.75)',
+        panel: 'rgba(10, 10, 20, 0.75)',
         success: 'hsl(var(--success))',
         card: {
           DEFAULT: 'hsl(var(--card))',
@@ -74,8 +74,8 @@ export default {
         sm: 'calc(var(--radius) - 4px)',
       },
       boxShadow: {
-        'primary-glow': '0 0 15px rgba(224, 17, 95, 0.8)',
-        'success-glow': '0 0 15px rgba(57, 255, 20, 0.8)',
+        'primary-glow': '0 0 15px hsla(var(--primary), 0.8)',
+        'success-glow': '0 0 15px hsla(var(--success), 0.8)',
       },
       keyframes: {
         'accordion-down': {
