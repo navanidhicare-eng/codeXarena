@@ -76,10 +76,12 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
     };
 
     useEffect(() => {
-        mockSocketService.onMatchFound((newGameState: GameState) => {
+        mockSocketService.onMatchFound((newGameState: Omit<GameState, 'matchId'>) => {
             console.log("Match found, updating state:", newGameState);
-            setGameState(newGameState);
-            router.push(`/arena/${newGameState.matchId}`);
+            const matchId = `mock-room-${Math.random().toString(36).substring(7)}`;
+            const fullGameState = { ...newGameState, matchId };
+            setGameState(fullGameState);
+            router.push(`/arena/${matchId}`);
         });
 
         mockSocketService.onStateUpdate((updatedGameState: GameState) => {

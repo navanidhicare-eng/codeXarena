@@ -14,7 +14,7 @@ type GameState = {
     status: 'waiting' | 'in-progress' | 'finished';
 };
 
-let onMatchFoundCallback: (gameState: GameState) => void;
+let onMatchFoundCallback: (gameState: Omit<GameState, 'matchId'>) => void;
 let onStateUpdateCallback: (gameState: GameState) => void;
 let onGameOverCallback: (data: { winner: string }) => void;
 let onHintResultCallback: (data: { hint: string }) => void;
@@ -26,7 +26,7 @@ const connect = (playerName: string) => {
     console.log(`Mock socket connected for player: ${playerName}`);
     // Reset state on new connection
     mockGameState = {
-        matchId: `mock-room-${Math.random().toString(36).substring(7)}`,
+        matchId: '', // This will be set on the client
         status: 'waiting',
         problem: {
             title: 'Two Sum',
@@ -64,7 +64,8 @@ const joinMatchmaking = () => {
         mockGameState.status = 'in-progress';
         if (onMatchFoundCallback) {
             console.log('Simulating match found. Firing callback.');
-            onMatchFoundCallback(mockGameState);
+            const { matchId, ...rest } = mockGameState;
+            onMatchFoundCallback(rest);
         }
     }, 2000);
 };
@@ -104,7 +105,7 @@ const emitGetHint = () => {
 };
 
 
-const onMatchFound = (callback: (gameState: GameState) => void) => {
+const onMatchFound = (callback: (gameState: Omit<GameState, 'matchId'>) => void) => {
     onMatchFoundCallback = callback;
 };
 
