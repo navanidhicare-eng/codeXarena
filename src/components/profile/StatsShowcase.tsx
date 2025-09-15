@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Flame, Percent, Swords, Code } from "lucide-react";
 import { motion } from "framer-motion";
