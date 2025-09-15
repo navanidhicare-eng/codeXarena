@@ -15,6 +15,7 @@ import {
 } from "react-resizable-panels";
 import { EmojiToolbar } from "@/components/EmojiToolbar";
 import { motion, AnimatePresence } from "framer-motion";
+import { DiceRollAnimation } from "@/components/DiceRollAnimation";
 
 type Language = "javascript" | "python" | "java" | "cpp";
 
@@ -35,6 +36,8 @@ export default function ArenaView({ params }: { params: { roomId: string } }) {
   const [playerCode, setPlayerCode] = useState("");
   const [selectedLanguage, setSelectedLanguage] = useState<Language>("javascript");
   const [isCodeRunning, setIsCodeRunning] = useState(false);
+  const [showDiceRoll, setShowDiceRoll] = useState(true);
+
 
   useEffect(() => {
     if (!playerName) {
@@ -72,6 +75,10 @@ export default function ArenaView({ params }: { params: { roomId: string } }) {
     sendEmoji(emoji);
   }
 
+  const handleAnimationComplete = () => {
+    setShowDiceRoll(false);
+  }
+
   if (!gameState || !playerName) {
     return (
       <div className="h-screen w-screen bg-background p-4 flex flex-col gap-4">
@@ -96,6 +103,11 @@ export default function ArenaView({ params }: { params: { roomId: string } }) {
       </div>
     );
   }
+  
+  if (showDiceRoll) {
+    return <DiceRollAnimation onAnimationComplete={handleAnimationComplete} />;
+  }
+
 
   return (
     <div className="h-screen w-screen bg-background p-4 flex flex-col gap-4">
