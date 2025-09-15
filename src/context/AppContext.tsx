@@ -1,11 +1,10 @@
-
 "use client";
 
-import React, { createContext, useState, useCallback, useEffect } from 'react';
-import { io, Socket } from 'socket.io-client';
+import React, { createContext, useState, useCallback, useEffect, ReactNode } from 'react';
+import { useRouter } from 'next/navigation';
+import mockSocketService from '@/services/mockSocketService';
 
-const SOCKET_URL = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001';
-
+// Define types for the state
 type PlayerState = {
     name: string;
     score: number;
@@ -27,13 +26,11 @@ type GameState = {
 
 interface AppContextType {
     playerName: string;
-    socket: Socket | null;
-    isConnected: boolean;
     gameState: GameState | null;
+    winner: string | null;
     hint: string | null;
     isHintLoading: boolean;
-    connect: (name: string) => void;
-    joinMatchmaking: () => void;
+    connectAndJoin: (name: string) => void;
     emitRunCode: (code: string) => void;
     emitGetHint: () => void;
     clearHint: () => void;
@@ -41,116 +38,80 @@ interface AppContextType {
 
 export const AppContext = createContext<AppContextType>({
     playerName: '',
-    socket: null,
-    isConnected: false,
     gameState: null,
+    winner: null,
     hint: null,
     isHintLoading: false,
-    connect: () => {},
-    joinMatchmaking: () => {},
+    connectAndJoin: () => {},
     emitRunCode: () => {},
     emitGetHint: () => {},
     clearHint: () => {},
 });
 
-export const AppContextProvider = ({ children }: { children: React.ReactNode }) => {
+export const AppContextProvider = ({ children }: { children: ReactNode }) => {
     const [playerName, setPlayerName] = useState<string>('');
-    const [socket, setSocket] = useState<Socket | null>(null);
-    const [isConnected, setIsConnected] = useState<boolean>(false);
     const [gameState, setGameState] = useState<GameState | null>(null);
+    const [winner, setWinner] = useState<string | null>(null);
     const [hint, setHint] = useState<string | null>(null);
     const [isHintLoading, setIsHintLoading] = useState(false);
+    const router = useRouter();
 
-    const onConnect = useCallback(() => {
-        console.log('Socket connected!');
-        setIsConnected(true);
-    }, []);
-
-    const onDisconnect = useCallback(() => {
-        console.log('Socket disconnected!');
-        setIsConnected(false);
-    }, []);
-
-    const onMatchFound = useCallback((data: { matchId: string }) => {
-        console.log('Match found!', data);
-        // The page will handle the redirect based on gameState update
-    }, []);
-    
-    const onStateUpdate = useCallback((newState: GameState) => {
-        console.log('Received state update:', newState);
-        setGameState(newState);
-    }, []);
-
-    const onHintResult = useCallback((data: { hint: string }) => {
-        console.log('Received hint:', data.hint);
-        setHint(data.hint);
-        setIsHintLoading(false);
-    }, []);
-    
-    const onHintError = useCallback((data: { error: string }) => {
-        console.error('Hint error:', data.error);
-        // In a real app, show a toast notification
-        setIsHintLoading(false);
-    }, []);
-
-    const onGameOver = useCallback((data: { winner: string }) => {
-        console.log('Game over! Winner:', data.winner);
-        // Handle game over logic, e.g., show a modal
-    }, []);
-
-    const connect = useCallback((name: string) => {
-        if (socket) return;
-
+    const connectAndJoin = (name: string) => {
         setPlayerName(name);
-        const newSocket = io(SOCKET_URL, {
-            query: { playerName: name },
-            transports: ['websocket'] 
-        });
+        mockSocketService.connect(name);
+        mockSocketService.joinMatchmaking();
+    };
+    
+    const emitRunCode = (code: string) => {
+        mockSocketService.emitRunCode(code);
+    };
 
-        newSocket.on('connect', onConnect);
-        newSocket.on('disconnect', onDisconnect);
-        newSocket.on('matchmaking:success', onMatchFound);
-        newSocket.on('battle:stateUpdate', onStateUpdate);
-        newSocket.on('battle:hintResult', onHintResult);
-        newSocket.on('battle:hintError', onHintError);
-        newSocket.on('battle:gameOver', onGameOver);
-        
-        setSocket(newSocket);
-    }, [socket, onConnect, onDisconnect, onMatchFound, onStateUpdate, onHintResult, onHintError, onGameOver]);
-
-    const joinMatchmaking = useCallback(() => {
-        socket?.emit('matchmaking:join');
-    }, [socket]);
-
-    const emitRunCode = useCallback((code: string) => {
-        socket?.emit('battle:runCode', { code });
-    }, [socket]);
-
-    const emitGetHint = useCallback(() => {
+    const emitGetHint = () => {
         setIsHintLoading(true);
-        socket?.emit('battle:getHint');
-    }, [socket]);
-
-    const clearHint = useCallback(() => {
+        mockSocketService.emitGetHint();
+    };
+    
+    const clearHint = () => {
         setHint(null);
-    }, []);
+    };
 
     useEffect(() => {
-        return () => {
-            socket?.disconnect();
-        };
-    }, [socket]);
-    
+        mockSocketService.onMatchFound((newGameState: GameState) => {
+            console.log("Match found, updating state:", newGameState);
+            setGameState(newGameState);
+            router.push(`/arena/${newGameState.matchId}`);
+        });
+
+        mockSocketService.onStateUpdate((updatedGameState: GameState) => {
+            console.log("State updated:", updatedGameState);
+            setGameState(updatedGameState);
+        });
+
+        mockSocketService.onGameOver((gameOverState: { winner: string }) => {
+            console.log("Game over:", gameOverState);
+            setWinner(gameOverState.winner);
+        });
+
+        mockSocketService.onHintResult((hintResult: { hint: string }) => {
+            setHint(hintResult.hint);
+            setIsHintLoading(false);
+        });
+
+        mockSocketService.onHintError((error: { error: string }) => {
+            console.error(error.error);
+            setIsHintLoading(false);
+        });
+
+    }, [router]);
+
     return (
         <AppContext.Provider value={{ 
             playerName, 
-            socket, 
-            isConnected, 
             gameState, 
+            winner,
             hint,
             isHintLoading,
-            connect, 
-            joinMatchmaking,
+            connectAndJoin,
             emitRunCode,
             emitGetHint,
             clearHint,

@@ -16,7 +16,6 @@ export default function ArenaView({ params }: { params: { roomId: string } }) {
   const {
     playerName,
     gameState,
-    isConnected,
     emitRunCode,
     emitGetHint,
     hint,

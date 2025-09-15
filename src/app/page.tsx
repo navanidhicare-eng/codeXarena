@@ -8,10 +8,10 @@ import { Loader2 } from "lucide-react";
 import { AppContext } from "@/context/AppContext";
 
 export default function LandingPage() {
-  const [playerName, setPlayerName] = useState("");
+  const [playerNameInput, setPlayerNameInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const { connect, joinMatchmaking, gameState } = useContext(AppContext);
+  const { connectAndJoin, gameState } = useContext(AppContext);
 
   useEffect(() => {
     if (gameState?.matchId) {
@@ -21,11 +21,10 @@ export default function LandingPage() {
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!playerName.trim() || isLoading) return;
+    if (!playerNameInput.trim() || isLoading) return;
 
     setIsLoading(true);
-    connect(playerName.trim());
-    joinMatchmaking();
+    connectAndJoin(playerNameInput.trim());
   };
 
   return (
@@ -43,14 +42,14 @@ export default function LandingPage() {
         <Input
           type="text"
           placeholder="Enter your gladiator name"
-          value={playerName}
-          onChange={(e) => setPlayerName(e.target.value)}
+          value={playerNameInput}
+          onChange={(e) => setPlayerNameInput(e.target.value)}
           className="h-14 text-lg text-center bg-transparent border-2 border-secondary/50 rounded-lg transition-all duration-300 focus:border-primary focus-visible:ring-0 focus:scale-105"
           disabled={isLoading}
         />
         <Button
           type="submit"
-          disabled={!playerName.trim() || isLoading}
+          disabled={!playerNameInput.trim() || isLoading}
           className="h-14 text-lg font-bold transition-all duration-300 bg-primary hover:bg-primary/80 hover:shadow-primary-glow disabled:bg-muted disabled:shadow-none disabled:cursor-not-allowed"
         >
           {isLoading ? (

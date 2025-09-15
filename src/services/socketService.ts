@@ -20,6 +20,11 @@ const connect = (name: string, url: string) => {
   return socket;
 };
 
+const joinMatchmaking = () => {
+    if (!socket) return;
+    socket.emit('matchmaking:join');
+}
+
 const onMatchFound = (callback: (data: any) => void) => {
   if (!socket) return;
   socket.on('matchmaking:success', callback);
@@ -47,6 +52,7 @@ const emitGetHint = () => {
 
 const socketService = {
   connect,
+  joinMatchmaking,
   onMatchFound,
   onStateUpdate,
   onGameOver,
