@@ -4,7 +4,7 @@ import { useState, useContext } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, User, Swords, Plus, LogIn } from "lucide-react";
+import { Loader2, User, Swords, Plus, LogIn, Map } from "lucide-react";
 import { AppContext } from "@/context/AppContext";
 import Link from "next/link";
 import {
@@ -75,8 +75,14 @@ export default function HomePage() {
 
 
   return (
-    <main className="min-h-screen w-full flex flex-col items-center justify-start bg-background text-foreground p-4 relative">
-       <div className="absolute top-6 right-6">
+    <main className="min-h-screen w-full flex flex-col items-center justify-start bg-background text-foreground p-4 relative overflow-y-auto">
+       <div className="absolute top-6 right-6 flex items-center gap-4">
+        <Button asChild variant="outline" size="icon" className="rounded-full h-12 w-12 border-secondary/50 hover:bg-secondary/10">
+            <Link href="/roadmaps">
+                <Map className="h-6 w-6 text-secondary" />
+                <span className="sr-only">Roadmaps</span>
+            </Link>
+        </Button>
         <Button asChild variant="outline" size="icon" className="rounded-full h-12 w-12 border-primary/50 hover:bg-primary/10">
           <Link href="/profile">
             <User className="h-6 w-6 text-primary" />
