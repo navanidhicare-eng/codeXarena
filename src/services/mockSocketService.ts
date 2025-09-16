@@ -4,6 +4,16 @@ type StarterCode = {
     [key in Language]: string;
 }
 
+type Problem = {
+    title: string;
+    description: string;
+    starterCode: StarterCode;
+    // This is a simplified solution checker for mock purposes.
+    // In a real scenario, this would be a robust sandboxed code runner.
+    solutionChecker: (code: string, lang: Language) => { name: string; passed: boolean }[];
+};
+
+
 type GameState = {
     matchId: string;
     players: {
@@ -19,12 +29,89 @@ type GameState = {
     status: 'waiting' | 'in-progress' | 'finished';
 };
 
-const starterCodes: StarterCode = {
-    javascript: `function twoSum(nums, target) {\n  // Write your code here\n};`,
-    python: `def two_sum(nums, target):\n  # Write your code here\n  pass`,
-    java: `class Solution {\n  public int[] twoSum(int[] nums, int target) {\n    // Write your code here\n  }\n}`,
-    cpp: `class Solution {\npublic:\n  vector<int> twoSum(vector<int>& nums, int target) {\n    // Write your code here\n  }\n};`
-};
+// --- Problem Bank ---
+
+const problems: Problem[] = [
+    {
+        title: 'Two Sum',
+        description: 'Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.',
+        starterCode: {
+            javascript: `function twoSum(nums, target) {\n  // Write your code here\n};`,
+            python: `def two_sum(nums, target):\n  # Write your code here\n  pass`,
+            java: `class Solution {\n  public int[] twoSum(int[] nums, int target) {\n    // Write your code here\n  }\n}`,
+            cpp: `class Solution {\npublic:\n  vector<int> twoSum(vector<int>& nums, int target) {\n    // Write your code here\n  }\n};`
+        },
+        solutionChecker: (code, lang) => {
+             // Mock solution check. In a real app, this would execute the code safely.
+            const passes = code.includes('Map') || code.includes('{');
+            return [
+                { name: 'Test with positive numbers', passed: passes },
+                { name: 'Test with negative numbers', passed: passes },
+                { name: 'Test with zero', passed: passes },
+                { name: 'Test with large numbers', passed: code.includes('Map') },
+            ];
+        }
+    },
+    {
+        title: 'FizzBuzz',
+        description: 'Write a program that prints the numbers from 1 to 100. But for multiples of three print “Fizz” instead of the number and for the multiples of five print “Buzz”. For numbers which are multiples of both three and five print “FizzBuzz”.',
+        starterCode: {
+            javascript: `function fizzBuzz() {\n  // Write your code here\n};`,
+            python: `def fizz_buzz():\n  # Write your code here\n  pass`,
+            java: `class Solution {\n  public void fizzBuzz() {\n    // Write your code here\n  }\n}`,
+            cpp: `class Solution {\npublic:\n  void fizzBuzz() {\n    // Write your code here\n  }\n};`
+        },
+         solutionChecker: (code, lang) => {
+            const hasFizz = code.includes('Fizz');
+            const hasBuzz = code.includes('Buzz');
+            const hasLoop = code.includes('for') || code.includes('while');
+            return [
+                { name: 'Prints Fizz for multiples of 3', passed: hasFizz && hasLoop },
+                { name: 'Prints Buzz for multiples of 5', passed: hasBuzz && hasLoop },
+                { name: 'Prints FizzBuzz for multiples of 15', passed: hasFizz && hasBuzz && hasLoop },
+                { name: 'Handles numbers not divisible by 3 or 5', passed: hasLoop },
+            ];
+        }
+    },
+    {
+        title: 'Reverse String',
+        description: 'Write a function that reverses a string. The input string is given as an array of characters s.',
+        starterCode: {
+            javascript: `function reverseString(s) {\n  // Write your code here\n};`,
+            python: `def reverse_string(s):\n  # Write your code here\n  pass`,
+            java: `class Solution {\n  public void reverseString(char[] s) {\n    // Write your code here\n  }\n}`,
+            cpp: `class Solution {\npublic:\n  void reverseString(vector<char>& s) {\n    // Write your code here\n  }\n};`
+        },
+         solutionChecker: (code, lang) => {
+            const passes = code.includes('reverse') || code.includes('swap') || (code.includes('[') && code.includes(']'));
+            return [
+                { name: 'Test with even length string', passed: passes },
+                { name: 'Test with odd length string', passed: passes },
+                { name: 'Test with empty string', passed: true },
+                { name: 'Test with palindrome', passed: passes },
+            ];
+        }
+    },
+     {
+        title: 'Is Palindrome',
+        description: 'Given an integer x, return true if x is a palindrome, and false otherwise.',
+        starterCode: {
+            javascript: `function isPalindrome(x) {\n  // Write your code here\n};`,
+            python: `def is_palindrome(x):\n  # Write your code here\n  pass`,
+            java: `class Solution {\n  public boolean isPalindrome(int x) {\n    // Write your code here\n  }\n}`,
+            cpp: `class Solution {\npublic:\n  bool isPalindrome(int x) {\n    // Write your code here\n  }\n};`
+        },
+         solutionChecker: (code, lang) => {
+            const passes = code.includes('reverse') || code.toString().includes('x');
+            return [
+                { name: 'Test with positive palindrome', passed: passes },
+                { name: 'Test with non-palindrome', passed: passes },
+                { name: 'Test with single digit', passed: true },
+                { name: 'Test with negative number', passed: passes },
+            ];
+        }
+    }
+];
 
 // Store callbacks
 let onMatchFoundCallback: (gameState: Omit<GameState, 'matchId'>) => void;
@@ -42,38 +129,33 @@ let onRoomClosedCallback: () => void;
 // In-memory store for rooms
 const rooms: { [key: string]: any } = {};
 let mockGameState: GameState; // Keep this for quick-match
+let currentProblem: Problem;
 
 const connect = (playerName: string) => {
     console.log(`Mock socket connected for player: ${playerName}`);
-    // Reset state on new connection for quick-match
+    
+    // Select a problem for this session
+    currentProblem = problems[Math.floor(Math.random() * problems.length)];
+    const initialTestCases = currentProblem.solutionChecker('', 'javascript').map(tc => ({ name: tc.name, passed: null }));
+
     mockGameState = {
         matchId: '', // This will be set on the client
         status: 'waiting',
         problem: {
-            title: 'Two Sum',
-            description: 'Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.',
-            starterCode: starterCodes,
+            title: currentProblem.title,
+            description: currentProblem.description,
+            starterCode: currentProblem.starterCode,
         },
         players: [
             {
                 name: playerName,
                 score: 0,
-                testCases: [
-                    { name: 'Test Case 1', passed: null },
-                    { name: 'Test Case 2', passed: null },
-                    { name: 'Test Case 3', passed: null },
-                    { name: 'Test Case 4', passed: null },
-                ]
+                testCases: JSON.parse(JSON.stringify(initialTestCases)) // Deep copy
             },
             {
                 name: 'Opponent',
                 score: 0,
-                testCases: [
-                    { name: 'Test Case 1', passed: null },
-                    { name: 'Test Case 2', passed: null },
-                    { name: 'Test Case 3', passed: null },
-                    { name: 'Test Case 4', passed: null },
-                ]
+                testCases: JSON.parse(JSON.stringify(initialTestCases)) // Deep copy
             }
         ],
     };
@@ -107,12 +189,7 @@ const emitJoinRoom = (roomId: string) => {
         mockGameState.players.push({
             name: 'BotFriend',
             score: 0,
-            testCases: [
-                { name: 'Test Case 1', passed: null },
-                { name: 'Test Case 2', passed: null },
-                { name: 'Test Case 3', passed: null },
-                { name: 'Test Case 4', passed: null },
-            ]
+            testCases: currentProblem.solutionChecker('', 'javascript').map(tc => ({ name: tc.name, passed: null }))
         });
         if (onStateUpdateCallback) {
             onStateUpdateCallback({ ...mockGameState });
@@ -125,12 +202,11 @@ const emitRunCode = (code: string) => {
     console.log(`Received code to run: ${code}`);
     setTimeout(() => {
         const player1 = mockGameState.players[0];
-        const firstUnsolvedIndex = player1.testCases.findIndex(tc => tc.passed !== true);
         
-        if (firstUnsolvedIndex !== -1) {
-            player1.testCases[firstUnsolvedIndex].passed = Math.random() > 0.3; // 70% chance to pass
-            player1.score = player1.testCases.filter(tc => tc.passed === true).length;
-        }
+        // Use the problem's specific solution checker
+        const results = currentProblem.solutionChecker(code, 'javascript'); // Assuming JS for mock
+        player1.testCases = results;
+        player1.score = player1.testCases.filter(tc => tc.passed === true).length;
         
         if (onStateUpdateCallback) {
             console.log('Simulating state update after code run.');
@@ -150,7 +226,7 @@ const emitGetHint = () => {
     console.log('Hint requested. Simulating delay...');
     setTimeout(() => {
         if (onHintResultCallback) {
-            onHintResultCallback({ hint: 'This is a mock hint. Try using a hash map for O(n) complexity.' });
+            onHintResultCallback({ hint: 'This is a mock hint. Have you considered the edge cases?' });
         }
     }, 1500);
 };
