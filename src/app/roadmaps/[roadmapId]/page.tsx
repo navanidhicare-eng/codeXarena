@@ -44,6 +44,7 @@ export default function RoadmapViewPage() {
       });
       setNodePositions(positions);
 
+      // Initialize progress based on dependencies
       const newProgress = { ...initialUserProgress };
       let changed = true;
       while (changed) {
@@ -52,14 +53,14 @@ export default function RoadmapViewPage() {
           if (newProgress[node.id]?.status === 'completed') return;
 
           if (node.parent_node_id) {
-            const parents = node.parent_node_id.split(',');
-            const allParentsComplete = parents.every(pId => newProgress[pId.trim()]?.status === 'completed');
+            const parents = node.parent_node_id.split(',').map(p => p.trim());
+            const allParentsComplete = parents.every(pId => newProgress[pId]?.status === 'completed');
             
             if (allParentsComplete && (!newProgress[node.id] || newProgress[node.id].status === 'locked')) {
               newProgress[node.id] = { status: 'unlocked' };
               changed = true;
             }
-          } else if (!newProgress[node.id]) {
+          } else if (!newProgress[node.id]) { // Root nodes
             newProgress[node.id] = { status: 'unlocked' };
             changed = true;
           }
@@ -81,9 +82,9 @@ export default function RoadmapViewPage() {
         // Unlock children if all parents are now complete
         roadmap?.nodes.forEach(childNode => {
             if (childNode.parent_node_id) {
-                const parents = childNode.parent_node_id.split(',');
-                const allParentsComplete = parents.every(pId => newProgress[pId.trim()]?.status === 'completed');
-                if (allParentsComplete && newProgress[childNode.id]?.status !== 'completed') {
+                const parents = childNode.parent_node_id.split(',').map(p => p.trim());
+                const allParentsComplete = parents.every(pId => newProgress[pId]?.status === 'completed');
+                if (allParentsComplete && (!newProgress[childNode.id] || newProgress[childNode.id].status === 'locked')) {
                     newProgress[childNode.id] = { status: 'unlocked' };
                 }
             }
@@ -119,39 +120,48 @@ export default function RoadmapViewPage() {
             </motion.div>
         </header>
         
-        <div className="flex-grow w-full border border-border rounded-lg bg-panel/50 relative overflow-auto p-8">
-            <svg width="100%" height="100%" style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}>
+        <div className="flex-grow w-full border border-border rounded-lg bg-panel/50 relative overflow-auto p-4">
+             <div 
+                className="absolute inset-0 w-full h-full" 
+                style={{
+                    backgroundImage: 'linear-gradient(rgba(var(--border-rgb), 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(var(--border-rgb), 0.1) 1px, transparent 1px)',
+                    backgroundSize: '30px 30px',
+                }}
+            />
+            <div className="relative w-[1500px] h-[1000px]">
+                <svg width="100%" height="100%" style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}>
+                    <AnimatePresence>
+                        {roadmap.nodes.map(node => {
+                            if (!node.parent_node_id) return null;
+                            
+                            const parents = node.parent_node_id.split(',');
+                            return parents.map((parentId, index) => {
+                                const parent = nodePositions[parentId.trim()];
+                                if (parent) {
+                                    const isParentCompleted = getNodeStatus(parent.id) === 'completed';
+                                    return <Line key={`${parent.id}-${node.id}-${index}`} fromNode={parent} toNode={node} isCompleted={isParentCompleted} />;
+                                }
+                                return null;
+                            });
+                        })}
+                    </AnimatePresence>
+                </svg>
+
                 <AnimatePresence>
-                    {roadmap.nodes.map(node => {
-                        if (!node.parent_node_id) return null;
-                        
-                        const parents = node.parent_node_id.split(',');
-                        return parents.map((parentId, index) => {
-                            const parent = nodePositions[parentId.trim()];
-                            if (parent) {
-                                const isParentCompleted = getNodeStatus(parent.id) === 'completed';
-                                return <Line key={`${parent.id}-${node.id}-${index}`} fromNode={parent} toNode={node} isCompleted={isParentCompleted} />;
-                            }
-                            return null;
-                        });
+                    {roadmap.nodes.map((node, index) => {
+                        const status = getNodeStatus(node.id);
+                        return (
+                            <RoadmapNodeComponent 
+                                key={node.id} 
+                                node={node} 
+                                status={status} 
+                                onClick={handleNodeClick}
+                                index={index}
+                            />
+                        );
                     })}
                 </AnimatePresence>
-            </svg>
-
-            <AnimatePresence>
-                {roadmap.nodes.map((node, index) => {
-                    const status = getNodeStatus(node.id);
-                    return (
-                        <RoadmapNodeComponent 
-                            key={node.id} 
-                            node={node} 
-                            status={status} 
-                            onClick={handleNodeClick}
-                            index={index}
-                        />
-                    );
-                })}
-            </AnimatePresence>
+            </div>
         </div>
     </div>
   );

@@ -22,14 +22,14 @@ type RoadmapNodeProps = {
 export function RoadmapNodeComponent({ node, status, onClick, index }: RoadmapNodeProps) {
     
     const nodeStyles = {
-        item: "px-4 py-2 text-sm",
-        group: "px-6 py-3 text-base font-bold",
+        item: "px-6 py-3 text-base",
+        group: "px-8 py-4 text-lg font-bold",
     }
 
     const iconMap = {
-        completed: <CheckCircle className="w-5 h-5" />,
-        unlocked: <Sparkles className="w-5 h-5 animate-pulse" />,
-        locked: <Lock className="w-5 h-5" />,
+        completed: <CheckCircle className="w-6 h-6" />,
+        unlocked: <Sparkles className="w-6 h-6 animate-pulse" />,
+        locked: <Lock className="w-6 h-6" />,
     }
 
     return (
@@ -52,14 +52,14 @@ export function RoadmapNodeComponent({ node, status, onClick, index }: RoadmapNo
                         <button
                             onClick={() => onClick(node, status)}
                             className={cn(
-                                "w-full flex items-center justify-center text-center transition-all duration-300 border-2 rounded-lg shadow-md backdrop-blur-sm",
+                                "w-full flex items-center justify-center text-center transition-all duration-300 border-2 rounded-lg shadow-lg backdrop-blur-sm",
                                 nodeStyles[node.type],
-                                status === 'completed' && "bg-green-500/20 border-green-500 text-green-200",
-                                status === 'unlocked' && "bg-yellow-500/20 border-yellow-500 text-yellow-200 cursor-pointer hover:bg-yellow-500/30 hover:shadow-lg shadow-yellow-500/30",
+                                status === 'completed' && "bg-green-500/20 border-green-500 text-green-200 shadow-green-500/20",
+                                status === 'unlocked' && "bg-yellow-500/20 border-yellow-500 text-yellow-200 cursor-pointer hover:bg-yellow-500/30 hover:shadow-xl shadow-yellow-500/30",
                                 status === 'locked' && "bg-gray-500/10 border-gray-600 text-gray-400 cursor-not-allowed"
                             )}
                         >
-                            <span className="mr-2">{iconMap[status]}</span>
+                            <span className="mr-3">{iconMap[status]}</span>
                             {node.title}
                         </button>
                     </TooltipTrigger>
