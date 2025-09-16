@@ -4,6 +4,7 @@
 import React, { createContext, useState, useCallback, useEffect, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import socketService from '@/services/socketService';
+import { useToast } from '@/hooks/use-toast';
 
 type Language = "javascript" | "python" | "java" | "cpp";
 
@@ -38,6 +39,8 @@ interface AppContextType {
     hint: string | null;
     isHintLoading: boolean;
     opponentEmoji: string | null;
+    roomPlayers: string[];
+    isRoomAdmin: boolean;
     connectAndJoin: (name: string) => void;
     createRoom: (playerName: string) => void;
     joinRoom: (playerName: string, roomId: string) => void;
@@ -45,6 +48,7 @@ interface AppContextType {
     emitGetHint: () => void;
     clearHint: () => void;
     sendEmoji: (emoji: string) => void;
+    startBattle: (roomId: string) => void;
 }
 
 export const AppContext = createContext<AppContextType>({
@@ -54,6 +58,8 @@ export const AppContext = createContext<AppContextType>({
     hint: null,
     isHintLoading: false,
     opponentEmoji: null,
+    roomPlayers: [],
+    isRoomAdmin: false,
     connectAndJoin: () => {},
     createRoom: () => {},
     joinRoom: () => {},
@@ -61,6 +67,7 @@ export const AppContext = createContext<AppContextType>({
     emitGetHint: () => {},
     clearHint: () => {},
     sendEmoji: () => {},
+    startBattle: () => {},
 });
 
 export const AppContextProvider = ({ children }: { children: ReactNode }) => {
@@ -70,12 +77,14 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
     const [hint, setHint] = useState<string | null>(null);
     const [isHintLoading, setIsHintLoading] = useState(false);
     const [opponentEmoji, setOpponentEmoji] = useState<string | null>(null);
+    const [roomPlayers, setRoomPlayers] = useState<string[]>([]);
+    const [isRoomAdmin, setIsRoomAdmin] = useState(false);
     const router = useRouter();
+    const { toast } = useToast();
 
-    const setupSocketListeners = (socket: any) => {
+    const setupSocketListeners = useCallback((socket: any) => {
         socketService.onMatchFound((newGameState: Omit<GameState, 'matchId'>) => {
             console.log("Match found, updating state:", newGameState);
-            // The server should provide the matchId now
             const fullGameState = { ...newGameState, matchId: (newGameState as any).id };
             setGameState(fullGameState);
             router.push(`/arena/${fullGameState.matchId}`);
@@ -84,6 +93,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         socketService.onMatchFoundForRoom((newGameState: GameState) => {
             console.log("Room match found, updating state:", newGameState);
             setGameState(newGameState);
+            setRoomPlayers([]);
             router.push(`/arena/${newGameState.matchId}`);
         });
 
@@ -104,43 +114,61 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
 
         socketService.onHintError((error: { message: string }) => {
             console.error(error.message);
-            // Optionally, show a toast to the user
             setIsHintLoading(false);
         });
 
         socketService.onEmojiReceive((data: { emoji: string }) => {
-            console.log('Emoji received:', data.emoji);
             setOpponentEmoji(data.emoji);
             setTimeout(() => setOpponentEmoji(null), 2000);
         });
-    }
 
-    const connectAndJoin = (name: string) => {
+        socketService.onRoomCreated(({ roomId }) => {
+            console.log('Room created, navigating to:', roomId);
+            setIsRoomAdmin(true);
+            router.push(`/room/${roomId}`);
+        });
+
+        socketService.onRoomUpdated(({ players }) => {
+            console.log('Room updated with players:', players);
+            setRoomPlayers(players);
+        });
+
+        socketService.onRoomJoinFailed(({ error }) => {
+            console.error('Room join failed:', error);
+            toast({
+                variant: 'destructive',
+                title: 'Could Not Join Room',
+                description: error,
+            });
+        });
+    }, [router, toast]);
+
+    const getConnectedSocket = useCallback((name: string) => {
         setPlayerName(name);
         const socket = socketService.connect(name, process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001');
         setupSocketListeners(socket);
+        return socket;
+    }, [setupSocketListeners]);
+
+    const connectAndJoin = (name: string) => {
+        const socket = getConnectedSocket(name);
         socketService.joinMatchmaking();
     };
 
     const createRoom = (playerName: string) => {
-        setPlayerName(playerName);
-        const socket = socketService.connect(playerName, process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001');
-        setupSocketListeners(socket);
-
-        socketService.onRoomCreated(({ roomId }) => {
-            console.log('Room created, navigating to:', roomId);
-            router.push(`/room/${roomId}`);
-        });
-
+        const socket = getConnectedSocket(playerName);
         socketService.emitCreateRoom({ playerName });
     }
 
     const joinRoom = (playerName: string, roomId: string) => {
-        setPlayerName(playerName);
-        const socket = socketService.connect(playerName, process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001');
-        setupSocketListeners(socket);
+        const socket = getConnectedSocket(playerName);
         socketService.emitJoinRoom(roomId);
+        router.push(`/room/${roomId}`);
     }
+
+    const startBattle = (roomId: string) => {
+        socketService.emitStartBattle(roomId);
+    };
     
     const emitRunCode = (code: string) => {
         socketService.emitRunCode(code);
@@ -159,7 +187,6 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         socketService.emitSendEmoji(emoji);
     };
 
-
     return (
         <AppContext.Provider value={{ 
             playerName, 
@@ -168,6 +195,8 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
             hint,
             isHintLoading,
             opponentEmoji,
+            roomPlayers,
+            isRoomAdmin,
             connectAndJoin,
             createRoom,
             joinRoom,
@@ -175,6 +204,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
             emitGetHint,
             clearHint,
             sendEmoji,
+            startBattle,
         }}>
             {children}
         </AppContext.Provider>

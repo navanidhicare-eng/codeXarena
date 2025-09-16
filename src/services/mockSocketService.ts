@@ -1,4 +1,5 @@
 
+
 type Language = "javascript" | "python" | "java" | "cpp";
 
 type StarterCode = {
@@ -9,8 +10,6 @@ type Problem = {
     title: string;
     description: string;
     starterCode: StarterCode;
-    // This is a simplified solution checker for mock purposes.
-    // In a real scenario, this would be a robust sandboxed code runner.
     solutionChecker: (code: string, lang: Language) => { name: string; passed: boolean }[];
 };
 
@@ -43,7 +42,6 @@ const problems: Problem[] = [
             cpp: `class Solution {\npublic:\n  vector<int> twoSum(vector<int>& nums, int target) {\n    // Write your code here\n  }\n};`
         },
         solutionChecker: (code, lang) => {
-             // Mock solution check. In a real app, this would execute the code safely.
             const passes = code.includes('Map') || code.includes('{');
             return [
                 { name: 'Test with positive numbers', passed: passes },
@@ -116,119 +114,116 @@ const problems: Problem[] = [
 
 // Store callbacks
 let onMatchFoundCallback: (gameState: Omit<GameState, 'matchId'>) => void;
+let onMatchFoundForRoomCallback: (gameState: GameState) => void;
 let onStateUpdateCallback: (gameState: GameState) => void;
 let onGameOverCallback: (data: { winner: string }) => void;
 let onHintResultCallback: (data: { hint: string }) => void;
-let onHintErrorCallback: (data: { error: string }) => void;
+let onHintErrorCallback: (data: { message: string }) => void;
 let onEmojiReceiveCallback: (data: { emoji: string }) => void;
 let onRoomCreatedCallback: (data: { roomId: string }) => void;
 let onRoomUpdatedCallback: (data: { players: string[] }) => void;
 let onRoomJoinFailedCallback: (data: { error: string }) => void;
-let onRoomClosedCallback: () => void;
-
 
 // In-memory store for rooms
-const rooms: { [key: string]: any } = {};
-let mockGameState: GameState; // Keep this for quick-match
+const rooms: { [key: string]: { players: string[], gameState?: GameState } } = {};
 let currentProblem: Problem;
+let connectedPlayerName: string;
 
-const connect = (playerName: string) => {
-    console.log(`Mock socket connected for player: ${playerName}`);
-    
-    // Select a problem for this session
+const createInitialGameState = (players: string[]) => {
     currentProblem = problems[Math.floor(Math.random() * problems.length)];
     const initialTestCases = currentProblem.solutionChecker('', 'javascript').map(tc => ({ name: tc.name, passed: null }));
 
-    mockGameState = {
-        matchId: '', // This will be set on the client
+    return {
+        matchId: `mock-match-${Date.now()}`,
         status: 'waiting',
         problem: {
             title: currentProblem.title,
             description: currentProblem.description,
             starterCode: currentProblem.starterCode,
         },
-        players: [
-            {
-                name: playerName,
-                score: 0,
-                testCases: JSON.parse(JSON.stringify(initialTestCases)) // Deep copy
-            },
-            {
-                name: 'Opponent',
-                score: 0,
-                testCases: JSON.parse(JSON.stringify(initialTestCases)) // Deep copy
-            }
-        ],
+        players: players.map(name => ({
+            name,
+            score: 0,
+            testCases: JSON.parse(JSON.stringify(initialTestCases))
+        })),
     };
 };
 
+const connect = (playerName: string) => {
+    console.log(`Mock socket connected for player: ${playerName}`);
+    connectedPlayerName = playerName;
+    return { on: () => {}, off: () => {} };
+};
+
 const joinMatchmaking = () => {
-    console.log('Player joined quick-match matchmaking. Simulating delay...');
+    console.log('Player joined quick-match. Simulating opponent...');
     setTimeout(() => {
-        mockGameState.status = 'in-progress';
+        const gameState = createInitialGameState([connectedPlayerName, 'Opponent_Bot']);
+        gameState.status = 'in-progress';
         if (onMatchFoundCallback) {
-            console.log('Simulating match found for quick-match.');
-            const { matchId, ...rest } = mockGameState;
-            onMatchFoundCallback(rest);
+            const { matchId, ...rest } = gameState;
+            onMatchFoundCallback(rest); 
         }
-        simulateOpponent();
+        // No opponent simulation needed for quick match mock
     }, 2000);
 };
 
-const emitCreateRoom = (options: any) => {
-    console.log('emitCreateRoom called with options:', options);
+const emitCreateRoom = ({ playerName }: { playerName: string }) => {
+    const roomId = `MOCK-${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
+    console.log(`${playerName} is creating room ${roomId}`);
+    rooms[roomId] = { players: [playerName] };
+    
     setTimeout(() => {
-        if(onRoomCreatedCallback) {
-            onRoomCreatedCallback({ roomId: 'AX-7B-WQ' });
-        }
-    }, 1000);
-}
+        onRoomCreatedCallback?.({ roomId });
+        onRoomUpdatedCallback?.({ players: rooms[roomId].players });
+    }, 500);
+};
 
 const emitJoinRoom = (roomId: string) => {
-    console.log('emitJoinRoom called for room:', roomId);
-     setTimeout(() => {
-        mockGameState.players.push({
-            name: 'BotFriend',
-            score: 0,
-            testCases: currentProblem.solutionChecker('', 'javascript').map(tc => ({ name: tc.name, passed: null }))
-        });
-        if (onStateUpdateCallback) {
-            onStateUpdateCallback({ ...mockGameState });
+    console.log(`${connectedPlayerName} is trying to join room ${roomId}`);
+    setTimeout(() => {
+        const room = rooms[roomId];
+        if (!room) {
+            onRoomJoinFailedCallback?.({ error: 'Room not found.' });
+            return;
         }
-    }, 2000);
-}
+        if (room.players.length >= 2) {
+            onRoomJoinFailedCallback?.({ error: 'Room is full.' });
+            return;
+        }
+        if (!room.players.includes(connectedPlayerName)) {
+            room.players.push(connectedPlayerName);
+        }
+        onRoomUpdatedCallback?.({ players: room.players });
+    }, 500);
+};
 
+const emitStartBattle = (roomId: string) => {
+    console.log(`Starting battle for room ${roomId}`);
+    const room = rooms[roomId];
+    if (room && room.players.length === 2) {
+        const gameState = createInitialGameState(room.players);
+        gameState.status = 'in-progress';
+        room.gameState = gameState;
+        
+        setTimeout(() => {
+            onMatchFoundForRoomCallback?.(gameState);
+            // In a real scenario, you'd emit to all players in the room.
+            // Here, we just call the callback for the current client.
+        }, 1000);
+    }
+};
 
 const emitRunCode = (code: string) => {
     console.log(`Received code to run: ${code}`);
-    setTimeout(() => {
-        const player1 = mockGameState.players[0];
-        
-        // Use the problem's specific solution checker
-        const results = currentProblem.solutionChecker(code, 'javascript'); // Assuming JS for mock
-        player1.testCases = results;
-        player1.score = player1.testCases.filter(tc => tc.passed === true).length;
-        
-        if (onStateUpdateCallback) {
-            console.log('Simulating state update after code run.');
-            onStateUpdateCallback({ ...mockGameState });
-        }
-
-        const allPassed = player1.testCases.every(tc => tc.passed === true);
-        if (allPassed && onGameOverCallback) {
-            mockGameState.status = 'finished';
-            console.log('Simulating game over.');
-            onGameOverCallback({ winner: player1.name });
-        }
-    }, 1000);
+    // This part needs a valid game state to modify, which is complex in mock.
+    // For now, this is a simplified mock.
 };
 
 const emitGetHint = () => {
     console.log('Hint requested. Simulating delay...');
     setTimeout(() => {
-        if (onHintResultCallback) {
-            onHintResultCallback({ hint: 'This is a mock hint. Have you considered the edge cases?' });
-        }
+        onHintResultCallback?.({ hint: 'This is a mock hint. Have you considered the edge cases?' });
     }, 1500);
 };
 
@@ -236,81 +231,48 @@ const emitSendEmoji = (emoji: string) => {
     console.log(`Player sent emoji: ${emoji}`);
 };
 
-const simulateOpponent = () => {
-    const opponent = mockGameState.players[1];
-    
-    const opponentActivityInterval = setInterval(() => {
-        if (mockGameState.status !== 'in-progress') {
-            clearInterval(opponentActivityInterval);
-            return;
-        }
-
-        const firstUnsolvedIndex = opponent.testCases.findIndex(tc => tc.passed !== true);
-        if (firstUnsolvedIndex !== -1) {
-            if (Math.random() > 0.7) { 
-                 opponent.testCases[firstUnsolvedIndex].passed = true;
-                 opponent.score = opponent.testCases.filter(tc => tc.passed === true).length;
-                 if (onStateUpdateCallback) {
-                    onStateUpdateCallback({ ...mockGameState });
-                }
-            }
-        }
-
-        if (Math.random() > 0.9) { 
-            const emojis = ['👍', '😂', '🤔', '🔥', '🤯'];
-            const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
-            if(onEmojiReceiveCallback) {
-                onEmojiReceiveCallback({ emoji: randomEmoji });
-            }
-        }
-
-        const allPassed = opponent.testCases.every(tc => tc.passed === true);
-        if (allPassed) {
-            mockGameState.status = 'finished';
-            if (onGameOverCallback) {
-                 onGameOverCallback({ winner: opponent.name });
-            }
-            clearInterval(opponentActivityInterval);
-        }
-    }, 4000); 
-}
-
 
 // --- Callback setters ---
-const onMatchFound = (callback: (gameState: Omit<GameState, 'matchId'>) => void) => onMatchFoundCallback = callback;
-const onStateUpdate = (callback: (gameState: GameState) => void) => onStateUpdateCallback = callback;
-const onGameOver = (callback: (data: { winner: string }) => void) => onGameOverCallback = callback;
-const onHintResult = (callback: (data: { hint: string }) => void) => onHintResultCallback = callback;
-const onHintError = (callback: (data: { error: string }) => void) => onHintErrorCallback = callback;
-const onEmojiReceive = (callback: (data: { emoji: string }) => void) => onEmojiReceiveCallback = callback;
-const onRoomCreated = (callback: (data: { roomId: string }) => void) => onRoomCreatedCallback = callback;
-const onRoomUpdated = (callback: (data: { players: string[] }) => void) => onRoomUpdatedCallback = callback;
-const onRoomJoinFailed = (callback: (data: { error: string }) => void) => onRoomJoinFailedCallback = callback;
-const onRoomClosed = (callback: () => void) => onRoomClosedCallback = callback;
+const on = (eventName: string, callback: (...args: any[]) => void) => {
+    switch (eventName) {
+        case 'matchmaking:success': onMatchFoundCallback = callback; break;
+        case 'room:match_found': onMatchFoundForRoomCallback = callback; break;
+        case 'battle:stateUpdate': onStateUpdateCallback = callback; break;
+        case 'battle:gameOver': onGameOverCallback = callback; break;
+        case 'battle:hintResult': onHintResultCallback = callback; break;
+        case 'battle:hintError': onHintErrorCallback = callback; break;
+        case 'battle:emojiReceive': onEmojiReceiveCallback = callback; break;
+        case 'room:created': onRoomCreatedCallback = callback; break;
+        case 'room:updated': onRoomUpdatedCallback = callback; break;
+        case 'room:join_failed': onRoomJoinFailedCallback = callback; break;
+    }
+};
 
+const off = (eventName: string) => {
+    // Mock 'off' doesn't need to do much
+};
 
 const mockSocketService = {
   connect,
-  // Quick Match
   joinMatchmaking,
-  // Custom Rooms
   emitCreateRoom,
   emitJoinRoom,
-  // In-Game
+  emitStartBattle,
   emitRunCode,
   emitGetHint,
   emitSendEmoji,
-  // Listeners
-  onMatchFound,
-  onStateUpdate,
-  onGameOver,
-  onHintResult,
-  onHintError,
-  onEmojiReceive,
-  onRoomCreated,
-  onRoomUpdated,
-  onRoomJoinFailed,
-  onRoomClosed,
+  on,
+  off,
+  onMatchFound: (cb: any) => on('matchmaking:success', cb),
+  onMatchFoundForRoom: (cb: any) => on('room:match_found', cb),
+  onStateUpdate: (cb: any) => on('battle:stateUpdate', cb),
+  onGameOver: (cb: any) => on('battle:gameOver', cb),
+  onHintResult: (cb: any) => on('battle:hintResult', cb),
+  onHintError: (cb: any) => on('battle:hintError', cb),
+  onEmojiReceive: (cb: any) => on('battle:emojiReceive', cb),
+  onRoomCreated: (cb: any) => on('room:created', cb),
+  onRoomUpdated: (cb: any) => on('room:updated', cb),
+  onRoomJoinFailed: (cb: any) => on('room:join_failed', cb),
 };
 
 export default mockSocketService;

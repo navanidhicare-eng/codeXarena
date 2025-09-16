@@ -4,12 +4,10 @@ import { io, Socket } from 'socket.io-client';
 let socket: Socket;
 
 const connect = (name: string, url: string) => {
-  if (socket) {
-    // If socket exists, update the query
-    socket.io.opts.query = { playerName: name };
-    // Reconnect if not connected
-    if (!socket.connected) {
-        socket.connect();
+  if (socket && socket.connected) {
+    if (socket.io.opts.query?.playerName !== name) {
+        socket.io.opts.query = { playerName: name };
+        socket.disconnect().connect();
     }
     return socket;
   }
@@ -17,6 +15,7 @@ const connect = (name: string, url: string) => {
   socket = io(url, {
     query: { playerName: name },
     transports: ['websocket'],
+    autoConnect: true,
   });
 
   socket.on('connect', () => {
@@ -30,31 +29,13 @@ const connect = (name: string, url: string) => {
   return socket;
 };
 
+// Quick Match
 const joinMatchmaking = () => {
     if (!socket) return;
     socket.emit('matchmaking:join');
 }
 
-const onMatchFound = (callback: (data: any) => void) => {
-  if (!socket) return;
-  socket.on('matchmaking:success', callback);
-};
-
-const onMatchFoundForRoom = (callback: (data: any) => void) => {
-  if (!socket) return;
-  socket.on('room:match_found', callback);
-}
-
-const onStateUpdate = (callback: (data: any) => void) => {
-  if (!socket) return;
-  socket.on('battle:stateUpdate', callback);
-};
-
-const onGameOver = (callback: (data: any) => void) => {
-    if (!socket) return;
-    socket.on('battle:gameOver', callback);
-}
-
+// In-Game
 const emitRunCode = (code: string) => {
     if (!socket) return;
     socket.emit('battle:runCode', { code });
@@ -70,21 +51,7 @@ const emitSendEmoji = (emoji: string) => {
     socket.emit('battle:sendEmoji', { emoji });
 }
 
-const onHintResult = (callback: (data: any) => void) => {
-    if(!socket) return;
-    socket.on('battle:hintResult', callback);
-}
-
-const onHintError = (callback: (data: any) => void) => {
-    if(!socket) return;
-    socket.on('battle:hintError', callback);
-}
-
-const onEmojiReceive = (callback: (data: any) => void) => {
-    if(!socket) return;
-    socket.on('battle:emojiReceive', callback);
-}
-
+// Rooms
 const emitCreateRoom = (options: any) => {
     if (!socket) return;
     socket.emit('room:create', options);
@@ -95,34 +62,86 @@ const emitJoinRoom = (roomId: string) => {
     socket.emit('room:join', { roomId });
 }
 
+const emitStartBattle = (roomId: string) => {
+    if (!socket) return;
+    socket.emit('room:start_battle', { roomId });
+}
+
+
+// --- LISTENERS ---
+
+const onMatchFound = (callback: (data: any) => void) => {
+  if (!socket) return;
+  socket.off('matchmaking:success').on('matchmaking:success', callback);
+};
+
+const onMatchFoundForRoom = (callback: (data: any) => void) => {
+  if (!socket) return;
+  socket.off('room:match_found').on('room:match_found', callback);
+}
+
+const onStateUpdate = (callback: (data: any) => void) => {
+  if (!socket) return;
+  socket.off('battle:stateUpdate').on('battle:stateUpdate', callback);
+};
+
+const onGameOver = (callback: (data: any) => void) => {
+    if (!socket) return;
+    socket.off('battle:gameOver').on('battle:gameOver', callback);
+}
+
+const onHintResult = (callback: (data: any) => void) => {
+    if(!socket) return;
+    socket.off('battle:hintResult').on('battle:hintResult', callback);
+}
+
+const onHintError = (callback: (data: any) => void) => {
+    if(!socket) return;
+    socket.off('battle:hintError').on('battle:hintError', callback);
+}
+
+const onEmojiReceive = (callback: (data: any) => void) => {
+    if(!socket) return;
+    socket.off('battle:emojiReceive').on('battle:emojiReceive', callback);
+}
+
 const onRoomCreated = (callback: (data: any) => void) => {
     if (!socket) return;
-    socket.on('room:created', callback);
+    socket.off('room:created').on('room:created', callback);
 }
 
 const onRoomUpdated = (callback: (data: any) => void) => {
     if(!socket) return;
-    socket.on('room:updated', callback);
+    socket.off('room:updated').on('room:updated', callback);
+}
+
+const onRoomJoinFailed = (callback: (data: { error: string }) => void) => {
+    if(!socket) return;
+    socket.off('room:join_failed').on('room:join_failed', callback);
 }
 
 
 const socketService = {
   connect,
+  // Emitters
   joinMatchmaking,
+  emitRunCode,
+  emitGetHint,
+  emitSendEmoji,
+  emitCreateRoom,
+  emitJoinRoom,
+  emitStartBattle,
+  // Listeners
   onMatchFound,
   onMatchFoundForRoom,
   onStateUpdate,
   onGameOver,
-  emitRunCode,
-  emitGetHint,
-  emitSendEmoji,
   onHintResult,
   onHintError,
   onEmojiReceive,
-  emitCreateRoom,
-  emitJoinRoom,
   onRoomCreated,
   onRoomUpdated,
+  onRoomJoinFailed,
 };
 
 export default socketService;

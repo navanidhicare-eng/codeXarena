@@ -7,14 +7,14 @@ import { Features } from "@/components/landing/Features";
 import { FinalCTA } from "@/components/landing/FinalCTA";
 import { useContext, useEffect } from "react";
 import { AppContext } from "@/context/AppContext";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function LandingPage() {
-    const { connectAndJoin, createRoom, joinRoom, playerName: existingPlayerName, gameState } = useContext(AppContext);
+    const { connectAndJoin, createRoom, joinRoom, gameState } = useContext(AppContext);
     const router = useRouter();
 
     useEffect(() => {
-        if (gameState?.matchId) {
+        if (gameState?.matchId && !window.location.pathname.startsWith('/arena')) {
             router.push(`/arena/${gameState.matchId}`);
         }
     }, [gameState, router]);
