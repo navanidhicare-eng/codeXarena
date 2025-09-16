@@ -39,8 +39,8 @@ interface AppContextType {
     isHintLoading: boolean;
     opponentEmoji: string | null;
     connectAndJoin: (name: string) => void;
-    createRoom: (options: any) => void;
-    joinRoom: (roomId: string) => void;
+    createRoom: (playerName: string) => void;
+    joinRoom: (playerName: string, roomId: string) => void;
     emitRunCode: (code: string) => void;
     emitGetHint: () => void;
     clearHint: () => void;
@@ -72,16 +72,19 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
     const [opponentEmoji, setOpponentEmoji] = useState<string | null>(null);
     const router = useRouter();
 
-    const connectAndJoin = (name: string) => {
-        setPlayerName(name);
-        const socket = socketService.connect(name, process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001');
-        
+    const setupSocketListeners = (socket: any) => {
         socketService.onMatchFound((newGameState: Omit<GameState, 'matchId'>) => {
             console.log("Match found, updating state:", newGameState);
             // The server should provide the matchId now
             const fullGameState = { ...newGameState, matchId: (newGameState as any).id };
             setGameState(fullGameState);
             router.push(`/arena/${fullGameState.matchId}`);
+        });
+
+        socketService.onMatchFoundForRoom((newGameState: GameState) => {
+            console.log("Room match found, updating state:", newGameState);
+            setGameState(newGameState);
+            router.push(`/arena/${newGameState.matchId}`);
         });
 
         socketService.onStateUpdate((updatedGameState: GameState) => {
@@ -110,25 +113,32 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
             setOpponentEmoji(data.emoji);
             setTimeout(() => setOpponentEmoji(null), 2000);
         });
-        
+    }
+
+    const connectAndJoin = (name: string) => {
+        setPlayerName(name);
+        const socket = socketService.connect(name, process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001');
+        setupSocketListeners(socket);
         socketService.joinMatchmaking();
     };
 
-    const createRoom = (options: any) => {
-        setPlayerName(options.playerName);
-        const socket = socketService.connect(options.playerName, process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001');
+    const createRoom = (playerName: string) => {
+        setPlayerName(playerName);
+        const socket = socketService.connect(playerName, process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001');
+        setupSocketListeners(socket);
 
         socketService.onRoomCreated(({ roomId }) => {
             console.log('Room created, navigating to:', roomId);
             router.push(`/room/${roomId}`);
         });
 
-        // Add other room-related listeners here if needed
-        socketService.emitCreateRoom(options);
+        socketService.emitCreateRoom({ playerName });
     }
 
-    const joinRoom = (roomId: string) => {
-        // Assuming player name is already set and connected
+    const joinRoom = (playerName: string, roomId: string) => {
+        setPlayerName(playerName);
+        const socket = socketService.connect(playerName, process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001');
+        setupSocketListeners(socket);
         socketService.emitJoinRoom(roomId);
     }
     

@@ -10,7 +10,7 @@ import { AppContext } from "@/context/AppContext";
 import { useRouter } from "next/navigation";
 
 export default function LandingPage() {
-    const { connectAndJoin, createRoom, playerName: existingPlayerName, gameState } = useContext(AppContext);
+    const { connectAndJoin, createRoom, joinRoom, playerName: existingPlayerName, gameState } = useContext(AppContext);
     const router = useRouter();
 
     useEffect(() => {
@@ -28,13 +28,22 @@ export default function LandingPage() {
 
     const handleCreateRoom = (playerName: string) => {
         if (!playerName.trim()) return;
-        createRoom({ playerName: playerName.trim() });
+        createRoom(playerName.trim());
+    }
+
+    const handleJoinRoom = (playerName: string, roomId: string) => {
+        if (!playerName.trim() || !roomId.trim()) return;
+        joinRoom(playerName, roomId);
     }
 
     return (
         <div className="w-full bg-background text-foreground">
             <main className="min-h-screen flex flex-col">
-                <LandingHero onEnterArena={handleEnterArena} onCreateRoom={handleCreateRoom} />
+                <LandingHero 
+                    onEnterArena={handleEnterArena} 
+                    onCreateRoom={handleCreateRoom}
+                    onJoinRoom={handleJoinRoom}
+                />
                 <HowItWorks />
                 <Features />
                 <FinalCTA onEnterArena={handleEnterArena} />

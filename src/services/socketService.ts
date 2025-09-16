@@ -5,6 +5,12 @@ let socket: Socket;
 
 const connect = (name: string, url: string) => {
   if (socket) {
+    // If socket exists, update the query
+    socket.io.opts.query = { playerName: name };
+    // Reconnect if not connected
+    if (!socket.connected) {
+        socket.connect();
+    }
     return socket;
   }
   
@@ -33,6 +39,11 @@ const onMatchFound = (callback: (data: any) => void) => {
   if (!socket) return;
   socket.on('matchmaking:success', callback);
 };
+
+const onMatchFoundForRoom = (callback: (data: any) => void) => {
+  if (!socket) return;
+  socket.on('room:match_found', callback);
+}
 
 const onStateUpdate = (callback: (data: any) => void) => {
   if (!socket) return;
@@ -99,6 +110,7 @@ const socketService = {
   connect,
   joinMatchmaking,
   onMatchFound,
+  onMatchFoundForRoom,
   onStateUpdate,
   onGameOver,
   emitRunCode,
