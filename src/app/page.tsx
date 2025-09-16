@@ -18,6 +18,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { LeaderboardView } from "@/components/LeaderboardView";
+import { DailyTasks } from "@/components/DailyTasks";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { motion } from 'framer-motion';
 
@@ -151,6 +152,11 @@ export default function HomePage() {
                 </Button>
             </div>
         </div>
+
+         <div className="w-full max-w-4xl mt-12">
+            <DailyTasks />
+        </div>
+
 
         <div className="w-full max-w-4xl mt-12">
            <Collapsible open={isLeaderboardOpen} onOpenChange={setIsLeaderboardOpen}>
