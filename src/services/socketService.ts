@@ -1,5 +1,6 @@
 
 import { io, Socket } from 'socket.io-client';
+import { toast } from '@/hooks/use-toast';
 
 let socket: Socket;
 
@@ -28,6 +29,11 @@ const connect = (name: string, url: string) => {
 
   socket.on('connect_error', (err) => {
     console.error('Socket.IO connection error:', err.message);
+    toast({
+        variant: 'destructive',
+        title: 'Connection Error',
+        description: `Could not connect to the server. Is it running at ${url}?`,
+    })
   });
 
   return socket;
