@@ -38,14 +38,18 @@ export default function ArenaView({ params }: { params: { roomId: string } }) {
   const [selectedLanguage, setSelectedLanguage] = useState<Language>("javascript");
   const [isCodeRunning, setIsCodeRunning] = useState(false);
   const [showDiceRoll, setShowDiceRoll] = useState(true);
-
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    // Redirect if player name is not set, but not on the server
-    if (typeof window !== 'undefined' && !playerName) {
+    setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
+    // Redirect if player name is not set, but only after the component has mounted on the client
+    if (isMounted && !playerName) {
       router.push("/");
     }
-  }, [playerName, router]);
+  }, [playerName, router, isMounted]);
   
   useEffect(() => {
     if (gameState?.problem?.starterCode) {
@@ -79,6 +83,10 @@ export default function ArenaView({ params }: { params: { roomId: string } }) {
 
   const handleAnimationComplete = () => {
     setShowDiceRoll(false);
+  }
+
+  if (!isMounted) {
+    return null; // or a loading skeleton
   }
 
   if (showDiceRoll && gameState) {
