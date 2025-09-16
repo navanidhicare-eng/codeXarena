@@ -37,8 +37,11 @@ export function LandingHero({ onEnterArena }: LandingHeroProps) {
             className="relative z-10 flex flex-col items-center gap-6"
         >
             <h1 className="font-headline font-bold text-5xl md:text-7xl lg:text-8xl text-foreground">
-                The Colosseum of Code.
+                Code, Battle, Learn.
             </h1>
+            <h2 className="font-headline font-bold text-2xl md:text-3xl text-primary -mt-4">
+                The Arena Waits
+            </h2>
 
             <p className="max-w-3xl text-base md:text-lg lg:text-xl text-muted-foreground">
                 The first real-time multiplayer coding arena. Challenge friends, get AI hints, and prove your skills in live head-to-head battles.
