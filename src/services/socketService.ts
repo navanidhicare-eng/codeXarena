@@ -89,6 +89,11 @@ const onRoomCreated = (callback: (data: any) => void) => {
     socket.on('room:created', callback);
 }
 
+const onRoomUpdated = (callback: (data: any) => void) => {
+    if(!socket) return;
+    socket.on('room:updated', callback);
+}
+
 
 const socketService = {
   connect,
@@ -105,6 +110,7 @@ const socketService = {
   emitCreateRoom,
   emitJoinRoom,
   onRoomCreated,
+  onRoomUpdated,
 };
 
 export default socketService;

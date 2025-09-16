@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { createContext, useState, useCallback, useEffect, ReactNode } from 'react';
@@ -123,6 +124,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         });
 
         // Add other room-related listeners here if needed
+        socketService.emitCreateRoom(options);
     }
 
     const joinRoom = (roomId: string) => {

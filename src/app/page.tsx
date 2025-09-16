@@ -10,13 +10,13 @@ import { AppContext } from "@/context/AppContext";
 import { useRouter } from "next/navigation";
 
 export default function LandingPage() {
-    const { connectAndJoin } = useContext(AppContext);
+    const { createRoom } = useContext(AppContext);
     const router = useRouter();
 
     const handleEnterArena = (playerName: string) => {
         if (!playerName.trim()) return;
-        connectAndJoin(playerName.trim());
-        router.push('/matchmaking');
+        // For custom rooms, we create a room and the creator waits.
+        createRoom({ playerName: playerName.trim() });
     };
 
     return (
