@@ -27,7 +27,7 @@ export function BadgeDisplay({ badges }: BadgeDisplayProps) {
   return (
     <div className="bg-panel backdrop-blur-md border border-primary/20 rounded-lg p-6">
        <TooltipProvider>
-            <div className="grid grid-cols-4 sm:grid-cols-5 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+            <div className="grid grid-cols-8 gap-3">
                 {badges.map((badge, index) => (
                     <motion.div
                         key={badge.id}
@@ -45,12 +45,12 @@ export function BadgeDisplay({ badges }: BadgeDisplayProps) {
                                         <Image
                                             src={badge.imageUrl}
                                             alt={badge.name}
-                                            width={48}
-                                            height={48}
+                                            width={32}
+                                            height={32}
                                             className="transform hover:scale-110 transition-transform"
                                         />
                                     ) : (
-                                        <Lock className="w-6 h-6 text-muted-foreground" />
+                                        <Lock className="w-5 h-5 text-muted-foreground" />
                                     )}
                                 </div>
                             </TooltipTrigger>
