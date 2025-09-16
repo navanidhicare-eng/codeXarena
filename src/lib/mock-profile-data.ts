@@ -1,4 +1,4 @@
-import { sub } from 'date-fns';
+import { sub, formatISO } from 'date-fns';
 
 export const mockProfileData = {
   avatarUrl: 'https://picsum.photos/seed/player1/200/200',
@@ -137,3 +137,22 @@ export const mockMatchHistory = [
     timestamp: sub(new Date(), { days: 5 }).toISOString(),
   },
 ];
+
+// Generate mock activity data for the last 365 days
+const generateActivityData = () => {
+    const today = new Date();
+    const data = [];
+    for (let i = 0; i < 365; i++) {
+        const date = sub(today, { days: i });
+        if (Math.random() > 0.3) { // 70% chance of having activity
+            const count = Math.floor(Math.random() * 15) + 1; // 1 to 15 contributions
+            data.push({
+                date: formatISO(date, { representation: 'date' }),
+                count: count,
+            });
+        }
+    }
+    return data;
+};
+
+export const mockActivityData = generateActivityData();

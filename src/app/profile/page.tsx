@@ -9,11 +9,13 @@ import {
   mockStatsData,
   mockBadgeData,
   mockMatchHistory,
+  mockActivityData,
 } from "@/lib/mock-profile-data";
 import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
+import { ActivityGraph } from "@/components/profile/ActivityGraph";
 
 export default function ProfilePage() {
   return (
@@ -29,6 +31,10 @@ export default function ProfilePage() {
         </div>
 
         <ProfileHeader data={mockProfileData} />
+        
+        <Separator className="my-8 bg-border/50" />
+        
+        <ActivityGraph activityData={mockActivityData} />
 
         <Separator className="my-8 bg-border/50" />
 
