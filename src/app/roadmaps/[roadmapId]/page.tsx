@@ -9,57 +9,20 @@ import { useParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { RoadmapNodeComponent } from '@/components/RoadmapNode';
 
-type GroupedNodes = {
-  [key: string]: RoadmapNode[];
-}
-
-const getNodeStatus = (nodeId: string, progress: typeof initialUserProgress): NodeStatus => {
-  return progress[nodeId]?.status || 'locked';
-};
-
 const Line = ({ fromNode, toNode, isCompleted }: { fromNode: RoadmapNode, toNode: RoadmapNode, isCompleted: boolean }) => {
-  const fromX = fromNode.position_x + (fromNode.width || 10) / 2;
-  const toX = toNode.position_x - (toNode.width || 10) / 2;
-  
   return (
     <motion.line
-      x1={`${fromNode.position_x + (fromNode.width || 15)}%`}
+      x1={`${fromNode.position_x}%`}
       y1={`${fromNode.position_y}%`}
       x2={`${toNode.position_x}%`}
       y2={`${toNode.position_y}%`}
-      stroke={isCompleted ? "hsl(var(--primary))" : "#cbd5e1"}
+      stroke={isCompleted ? "hsl(var(--primary))" : "#4A5568"}
       strokeWidth="2"
-      strokeDasharray={isCompleted ? "0" : "4 4"}
       initial={{ pathLength: 0 }}
       animate={{ pathLength: 1 }}
       transition={{ duration: 0.5, delay: 0.3 }}
     />
   );
-};
-
-const DottedLine = ({ from, to }: { from: RoadmapNode, to: RoadmapNode }) => {
-    const fromX = from.position_x;
-    const fromY = from.position_y;
-    const toX = to.position_x;
-    const toY = to.position_y;
-    
-    // Mid-point for curve
-    const midX = fromX + (toX - fromX) / 2;
-    
-    const path = `M ${from.position_x + (from.width || 10)} ${from.position_y} C ${midX} ${from.position_y}, ${midX} ${to.position_y}, ${to.position_x} ${to.position_y}`;
-
-    return (
-        <motion.path
-            d={path}
-            stroke="hsl(var(--primary))"
-            strokeWidth="2"
-            strokeDasharray="1 5"
-            fill="transparent"
-            initial={{ pathLength: 0 }}
-            animate={{ pathLength: 1 }}
-            transition={{ duration: 0.8, delay: 0.5 }}
-        />
-    );
 };
 
 export default function RoadmapViewPage() {
@@ -68,8 +31,7 @@ export default function RoadmapViewPage() {
   const [roadmap, setRoadmap] = useState<Roadmap | null>(null);
   const [userProgress, setUserProgress] = useState(initialUserProgress);
   const [nodePositions, setNodePositions] = useState<{ [key: string]: RoadmapNode }>({});
-  const [groupedNodes, setGroupedNodes] = useState<GroupedNodes>({});
-
+  
   useEffect(() => {
     if (!roadmapId) return;
     const fetchedRoadmap = getRoadmapById(roadmapId);
@@ -77,30 +39,23 @@ export default function RoadmapViewPage() {
       setRoadmap(fetchedRoadmap);
       
       const positions: { [key: string]: RoadmapNode } = {};
-      const groups: GroupedNodes = {};
-      
       fetchedRoadmap.nodes.forEach(node => {
         positions[node.id] = node;
-        if (node.group_id) {
-            if (!groups[node.group_id]) {
-                groups[node.group_id] = [];
-            }
-            groups[node.group_id].push(node);
-        }
       });
-      
       setNodePositions(positions);
-      setGroupedNodes(groups);
 
       const newProgress = { ...initialUserProgress };
       let changed = true;
       while (changed) {
         changed = false;
         fetchedRoadmap.nodes.forEach(node => {
+          if (newProgress[node.id]?.status === 'completed') return;
+
           if (node.parent_node_id) {
             const parents = node.parent_node_id.split(',');
-            const allParentsComplete = parents.every(pId => newProgress[pId]?.status === 'completed');
-            if (allParentsComplete && !newProgress[node.id]) {
+            const allParentsComplete = parents.every(pId => newProgress[pId.trim()]?.status === 'completed');
+            
+            if (allParentsComplete && (!newProgress[node.id] || newProgress[node.id].status === 'locked')) {
               newProgress[node.id] = { status: 'unlocked' };
               changed = true;
             }
@@ -111,21 +66,23 @@ export default function RoadmapViewPage() {
         });
       }
       setUserProgress(newProgress);
-
     }
   }, [roadmapId]);
 
+  const getNodeStatus = (nodeId: string): NodeStatus => {
+    return userProgress[nodeId]?.status || 'locked';
+  };
 
   const handleNodeClick = (node: RoadmapNode, status: NodeStatus) => {
     if (status === 'unlocked' || status === 'completed') {
-        // In a real app, you might show MCQs here
         const newProgress = { ...userProgress };
         newProgress[node.id] = { status: 'completed' };
 
+        // Unlock children if all parents are now complete
         roadmap?.nodes.forEach(childNode => {
             if (childNode.parent_node_id) {
                 const parents = childNode.parent_node_id.split(',');
-                const allParentsComplete = parents.every(pId => newProgress[pId]?.status === 'completed');
+                const allParentsComplete = parents.every(pId => newProgress[pId.trim()]?.status === 'completed');
                 if (allParentsComplete && newProgress[childNode.id]?.status !== 'completed') {
                     newProgress[childNode.id] = { status: 'unlocked' };
                 }
@@ -135,7 +92,6 @@ export default function RoadmapViewPage() {
         setUserProgress(newProgress);
     }
   }
-
 
   if (!roadmap) {
     return (
@@ -163,51 +119,28 @@ export default function RoadmapViewPage() {
             </motion.div>
         </header>
         
-        <div className="flex-grow w-full border border-border rounded-lg bg-card relative overflow-auto p-8">
+        <div className="flex-grow w-full border border-border rounded-lg bg-panel/50 relative overflow-auto p-8">
             <svg width="100%" height="100%" style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}>
-                <defs>
-                    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto">
-                        <polygon points="0 0, 10 3.5, 0 7" fill="hsl(var(--primary))" />
-                    </marker>
-                </defs>
                 <AnimatePresence>
                     {roadmap.nodes.map(node => {
                         if (!node.parent_node_id) return null;
                         
                         const parents = node.parent_node_id.split(',');
                         return parents.map((parentId, index) => {
-                            const parent = nodePositions[parentId];
+                            const parent = nodePositions[parentId.trim()];
                             if (parent) {
-                                const isParentCompleted = getNodeStatus(parentId, userProgress) === 'completed';
+                                const isParentCompleted = getNodeStatus(parent.id) === 'completed';
                                 return <Line key={`${parent.id}-${node.id}-${index}`} fromNode={parent} toNode={node} isCompleted={isParentCompleted} />;
                             }
                             return null;
                         });
                     })}
-                     {Object.keys(groupedNodes).map((groupId, groupIndex) => {
-                        const groupNodes = groupedNodes[groupId];
-                        const parentId = groupNodes[0].parent_node_id;
-                        if (!parentId) return null;
-                        const parentNode = nodePositions[parentId];
-                        if (!parentNode) return null;
-                        
-                        return groupNodes.map((node, nodeIndex) => (
-                             <DottedLine key={`${parentNode.id}-${node.id}-${groupIndex}-${nodeIndex}`} from={node} to={parentNode} />
-                        ))
-                    })}
-                     {/* Connect grouped nodes to their core concept */}
-                     <DottedLine key="line-1" from={nodePositions['dsa-lang-syntax']} to={nodePositions['dsa-fundamentals']} />
-                     <DottedLine key="line-2" from={nodePositions['dsa-control-structures']} to={nodePositions['dsa-fundamentals']} />
-                     <DottedLine key="line-3" from={nodePositions['dsa-pseudo-code']} to={nodePositions['dsa-fundamentals']} />
-                     <DottedLine key="line-4" from={nodePositions['dsa-functions']} to={nodePositions['dsa-fundamentals']} />
-                     <DottedLine key="line-5" from={nodePositions['dsa-oop-basics']} to={nodePositions['dsa-fundamentals']} />
-
                 </AnimatePresence>
             </svg>
 
             <AnimatePresence>
                 {roadmap.nodes.map((node, index) => {
-                    const status = getNodeStatus(node.id, userProgress);
+                    const status = getNodeStatus(node.id);
                     return (
                         <RoadmapNodeComponent 
                             key={node.id} 

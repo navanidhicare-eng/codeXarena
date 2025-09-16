@@ -52,19 +52,19 @@ export function RoadmapNodeComponent({ node, status, onClick, index }: RoadmapNo
                         <button
                             onClick={() => onClick(node, status)}
                             className={cn(
-                                "w-full flex items-center justify-center text-center transition-all duration-300 border-2 rounded-lg shadow-md",
+                                "w-full flex items-center justify-center text-center transition-all duration-300 border-2 rounded-lg shadow-md backdrop-blur-sm",
                                 nodeStyles[node.type],
-                                status === 'completed' && "bg-green-100 border-green-500 text-green-800",
-                                status === 'unlocked' && "bg-yellow-100 border-yellow-500 text-yellow-800 cursor-pointer hover:bg-yellow-200 hover:shadow-lg",
-                                status === 'locked' && "bg-gray-100 border-gray-300 text-gray-500 cursor-not-allowed"
+                                status === 'completed' && "bg-green-500/20 border-green-500 text-green-200",
+                                status === 'unlocked' && "bg-yellow-500/20 border-yellow-500 text-yellow-200 cursor-pointer hover:bg-yellow-500/30 hover:shadow-lg shadow-yellow-500/30",
+                                status === 'locked' && "bg-gray-500/10 border-gray-600 text-gray-400 cursor-not-allowed"
                             )}
                         >
                             <span className="mr-2">{iconMap[status]}</span>
                             {node.title}
                         </button>
                     </TooltipTrigger>
-                    <TooltipContent>
-                        <p className="font-bold">{node.title}</p>
+                    <TooltipContent className="bg-panel border-primary">
+                        <p className="font-bold text-primary">{node.title}</p>
                         <p className="capitalize text-sm text-muted-foreground">{status}</p>
                     </TooltipContent>
                 </Tooltip>
