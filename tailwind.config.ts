@@ -14,7 +14,7 @@ export default {
       },
       fontFamily: {
         body: ['Inter', 'sans-serif'],
-        headline: ['Inter', 'sans-serif'],
+        headline: ['"Press Start 2P"', 'cursive'],
         code: ['Roboto Mono', 'monospace'],
         pixel: ['"Press Start 2P"', 'cursive'],
       },
