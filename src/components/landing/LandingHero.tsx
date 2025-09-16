@@ -36,7 +36,7 @@ export function LandingHero({ onEnterArena }: LandingHeroProps) {
             transition={{ duration: 0.8, ease: 'easeOut' }}
             className="relative z-10 flex flex-col items-center gap-4"
         >
-            <h1 className="font-headline font-bold text-5xl md:text-6xl text-foreground whitespace-nowrap">
+            <h1 className="font-headline font-bold text-4xl sm:text-5xl md:text-6xl text-foreground whitespace-nowrap">
                 Code, Battle, Learn.
             </h1>
             <h2 className="font-headline font-bold text-2xl md:text-3xl text-primary">
