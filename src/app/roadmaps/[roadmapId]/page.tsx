@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { getRoadmapById, userProgress as initialUserProgress, Roadmap, RoadmapNode, NodeStatus, NodeType } from '@/lib/mock-roadmaps-data';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
-import { notFound } from 'next/navigation';
+import { notFound, useParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { RoadmapNodeComponent } from '@/components/RoadmapNode';
 
@@ -62,7 +62,9 @@ const DottedLine = ({ from, to }: { from: RoadmapNode, to: RoadmapNode }) => {
     );
 };
 
-export default function RoadmapViewPage({ params: { roadmapId } }: { params: { roadmapId: string } }) {
+export default function RoadmapViewPage() {
+  const params = useParams();
+  const roadmapId = params.roadmapId as string;
   const [roadmap, setRoadmap] = useState<Roadmap | null>(null);
   const [userProgress, setUserProgress] = useState(initialUserProgress);
   const [nodePositions, setNodePositions] = useState<{ [key: string]: RoadmapNode }>({});
@@ -174,24 +176,24 @@ export default function RoadmapViewPage({ params: { roadmapId } }: { params: { r
                         if (!node.parent_node_id) return null;
                         
                         const parents = node.parent_node_id.split(',');
-                        return parents.map(parentId => {
+                        return parents.map((parentId, index) => {
                             const parent = nodePositions[parentId];
                             if (parent) {
                                 const isParentCompleted = getNodeStatus(parentId, userProgress) === 'completed';
-                                return <Line key={`${parent.id}-${node.id}`} fromNode={parent} toNode={node} isCompleted={isParentCompleted} />;
+                                return <Line key={`${parent.id}-${node.id}-${index}`} fromNode={parent} toNode={node} isCompleted={isParentCompleted} />;
                             }
                             return null;
                         });
                     })}
-                     {Object.keys(groupedNodes).map(groupId => {
+                     {Object.keys(groupedNodes).map((groupId, groupIndex) => {
                         const groupNodes = groupedNodes[groupId];
                         const parentId = groupNodes[0].parent_node_id;
                         if (!parentId) return null;
                         const parentNode = nodePositions[parentId];
                         if (!parentNode) return null;
                         
-                        return groupNodes.map(node => (
-                             <DottedLine key={`${parentNode.id}-${node.id}`} from={node} to={parentNode} />
+                        return groupNodes.map((node, nodeIndex) => (
+                             <DottedLine key={`${parentNode.id}-${node.id}-${groupIndex}-${nodeIndex}`} from={node} to={parentNode} />
                         ))
                     })}
                      {/* Connect grouped nodes to their core concept */}
