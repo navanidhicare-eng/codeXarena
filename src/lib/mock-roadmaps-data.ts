@@ -31,8 +31,8 @@ const dsaRoadmapNodes: RoadmapNode[] = [
   { id: 'dsa-3', problem_id: 'linked-lists', title: 'Linked Lists', position_x: 35, position_y: 35, parent_node_id: 'dsa-2' },
   { id: 'dsa-4', problem_id: 'stacks-queues', title: 'Stacks & Queues', position_x: 35, position_y: 65, parent_node_id: 'dsa-2' },
   // Non-Linear
-  { id: 'dsa-5', problem_id: 'trees', title: 'Trees & Tries', position_x: 50, position_y: 35, parent_node_id: 'dsa-3' },
-  { id: 'dsa-6', problem_id: 'heaps', title: 'Heaps', position_x: 50, position_y: 65, parent_node_id: 'dsa-4' },
+  { id: 'dsa-5', problem_id: 'trees', title: 'Trees & Tries', position_x: 50, position_y: 20, parent_node_id: 'dsa-3' },
+  { id: 'dsa-6', problem_id: 'heaps', title: 'Heaps', position_x: 50, position_y: 80, parent_node_id: 'dsa-4' },
    // Advanced Structures
   { id: 'dsa-7', problem_id: 'hash-tables', title: 'Hash Tables', position_x: 65, position_y: 50, parent_node_id: 'dsa-5' },
   { id: 'dsa-8', problem_id: 'graphs', title: 'Graphs', position_x: 65, position_y: 50, parent_node_id: 'dsa-6' },
@@ -40,9 +40,7 @@ const dsaRoadmapNodes: RoadmapNode[] = [
   { id: 'dsa-9', problem_id: 'sorting-searching', title: 'Sorting & Searching', position_x: 80, position_y: 35, parent_node_id: 'dsa-7' },
   { id: 'dsa-10', problem_id: 'recursion', title: 'Recursion', position_x: 80, position_y: 65, parent_node_id: 'dsa-8' },
     // Final
-  { id: 'dsa-11', problem_id: 'final-project', title: 'Capstone Challenge', position_x: 95, position_y: 50, parent_node_id: 'dsa-9' },
-  { id: 'dsa-12', problem_id: 'final-project', title: 'Capstone Challenge', position_x: 95, position_y: 50, parent_node_id: 'dsa-10' },
-
+  { id: 'dsa-11', problem_id: 'final-project', title: 'Capstone Challenge', position_x: 95, position_y: 50, parent_node_id: 'dsa-9,dsa-10' },
 ];
 
 const webDevRoadmapNodes: RoadmapNode[] = [
@@ -53,8 +51,7 @@ const webDevRoadmapNodes: RoadmapNode[] = [
   { id: 'web-5', problem_id: 'express-api', title: 'Express API', position_x: 65, position_y: 35, parent_node_id: 'web-4' },
   { id: 'web-6', problem_id: 'sql-intro', title: 'SQL Fundamentals', position_x: 50, position_y: 65, parent_node_id: 'web-3' },
   { id: 'web-7', problem_id: 'db-connection', title: 'Connecting a DB', position_x: 65, position_y: 65, parent_node_id: 'web-6' },
-  { id: 'web-8', problem_id: 'auth', title: 'Authentication', position_x: 80, position_y: 50, parent_node_id: 'web-5' },
-  { id: 'web-9', problem_id: 'auth', title: 'Authentication', position_x: 80, position_y: 50, parent_node_id: 'web-7' },
+  { id: 'web-8', problem_id: 'auth', title: 'Authentication', position_x: 80, position_y: 50, parent_node_id: 'web-5,web-7' },
   { id: 'web-10', problem_id: 'final-project-fullstack', title: 'Full-Stack Project', position_x: 95, position_y: 50, parent_node_id: 'web-8' },
 ];
 
@@ -65,8 +62,7 @@ const aiMlRoadmapNodes: RoadmapNode[] = [
     { id: 'ai-4', problem_id: 'knn', title: 'K-Nearest Neighbors', position_x: 35, position_y: 65, parent_node_id: 'ai-2' },
     { id: 'ai-5', problem_id: 'decision-trees', title: 'Decision Trees', position_x: 50, position_y: 35, parent_node_id: 'ai-3' },
     { id: 'ai-6', problem_id: 'svm', title: 'Support Vector Machines', position_x: 50, position_y: 65, parent_node_id: 'ai-4' },
-    { id: 'ai-7', problem_id: 'neural-networks', title: 'Intro to Deep Learning', position_x: 65, position_y: 50, parent_node_id: 'ai-5' },
-    { id: 'ai-8', problem_id: 'neural-networks', title: 'Intro to Deep Learning', position_x: 65, position_y: 50, parent_node_id: 'ai-6' },
+    { id: 'ai-7', problem_id: 'neural-networks', title: 'Intro to Deep Learning', position_x: 65, position_y: 50, parent_node_id: 'ai-5,ai-6' },
     { id: 'ai-9', problem_id: 'final-project-ai', title: 'Final Project', position_x: 80, position_y: 50, parent_node_id: 'ai-7' },
 ];
 
@@ -97,13 +93,10 @@ export const roadmaps: Roadmap[] = [
 // Mock user progress. In a real app, this would come from a database.
 export const userProgress: UserProgress = {
   'dsa-1': { status: 'completed' },
-  'dsa-2': { status: 'completed' },
-  'dsa-3': { status: 'unlocked' },
-  'dsa-4': { status: 'unlocked' },
-
   'web-1': { status: 'completed' },
-  'web-2': { status: 'unlocked' },
-  
+  'web-2': { status: 'completed' },
+  'web-3': { status: 'completed' },
+  'web-6': { status: 'unlocked' },
   'ai-1': { status: 'unlocked' },
 };
 

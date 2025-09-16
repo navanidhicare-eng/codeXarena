@@ -20,8 +20,7 @@ const getNodeStatus = (nodeId: string, progress: typeof initialUserProgress): No
   return progress[nodeId]?.status || 'locked';
 };
 
-const Line = ({ fromNode, toNode }: { fromNode: RoadmapNode, toNode: RoadmapNode }) => {
-  const isCompleted = getNodeStatus(fromNode.id, initialUserProgress) === 'completed';
+const Line = ({ fromNode, toNode, isCompleted }: { fromNode: RoadmapNode, toNode: RoadmapNode, isCompleted: boolean }) => {
   return (
     <motion.line
       x1={`${fromNode.position_x}%`}
@@ -30,10 +29,9 @@ const Line = ({ fromNode, toNode }: { fromNode: RoadmapNode, toNode: RoadmapNode
       y2={`${toNode.position_y}%`}
       stroke="hsl(var(--border))"
       strokeWidth="2"
-      strokeDasharray={isCompleted ? "0" : "4 4"}
       initial={{ pathLength: 0 }}
-      animate={{ pathLength: 1 }}
-      transition={{ duration: 0.5, delay: 0.5 }}
+      animate={{ pathLength: 1, strokeDasharray: isCompleted ? "0" : "5 5" }}
+      transition={{ duration: 0.8, delay: 0.3 }}
     />
   );
 };
@@ -62,9 +60,13 @@ export default function RoadmapViewPage({ params }: { params: { roadmapId: strin
       while(changed) {
           changed = false;
           fetchedRoadmap.nodes.forEach(node => {
-              if (node.parent_node_id && newProgress[node.parent_node_id]?.status === 'completed' && !newProgress[node.id]) {
-                  newProgress[node.id] = { status: 'unlocked' };
-                  changed = true;
+              if (node.parent_node_id) {
+                const parents = node.parent_node_id.split(',');
+                const allParentsComplete = parents.every(pId => newProgress[pId]?.status === 'completed');
+                if (allParentsComplete && !newProgress[node.id]) {
+                     newProgress[node.id] = { status: 'unlocked' };
+                     changed = true;
+                }
               } else if (!node.parent_node_id && !newProgress[node.id]) {
                   newProgress[node.id] = { status: 'unlocked' };
                   changed = true;
@@ -81,17 +83,19 @@ export default function RoadmapViewPage({ params }: { params: { roadmapId: strin
 
   const handleNodeClick = (node: RoadmapNode, status: NodeStatus) => {
     if (status === 'unlocked') {
-        // In a real app, this would navigate to the problem
-        // Here we'll just complete it and unlock the next one
         console.log(`Navigating to problem: ${node.problem_id}`);
 
         const newProgress = { ...userProgress };
         newProgress[node.id] = { status: 'completed' };
 
-        // Unlock children
+        // Unlock children if their parents are now all complete
         roadmap?.nodes.forEach(childNode => {
-            if (childNode.parent_node_id === node.id) {
-                newProgress[childNode.id] = { status: 'unlocked' };
+            if (childNode.parent_node_id) {
+                const parents = childNode.parent_node_id.split(',');
+                const allParentsComplete = parents.every(pId => newProgress[pId]?.status === 'completed');
+                if (allParentsComplete) {
+                    newProgress[childNode.id] = { status: 'unlocked' };
+                }
             }
         });
 
@@ -112,35 +116,45 @@ export default function RoadmapViewPage({ params }: { params: { roadmapId: strin
     <TooltipProvider>
         <div className="min-h-screen bg-background text-foreground p-4 sm:p-6 lg:p-8 flex flex-col">
             <header className="flex items-center justify-between mb-8 flex-shrink-0">
-                <div>
+                 <motion.div
+                    initial={{ opacity: 0, x: -50 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.5 }}
+                >
                     <h1 className="text-4xl font-headline font-bold bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text">
                         {roadmap.title}
                     </h1>
                     <p className="text-muted-foreground mt-2">{roadmap.description}</p>
-                </div>
-                <Button asChild variant="outline">
-                    <Link href="/roadmaps">
-                        <ArrowLeft className="mr-2 h-4 w-4" />
-                        Back to All Roadmaps
-                    </Link>
-                </Button>
+                </motion.div>
+                <motion.div
+                    initial={{ opacity: 0, x: 50 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.5 }}
+                >
+                    <Button asChild variant="outline">
+                        <Link href="/roadmaps">
+                            <ArrowLeft className="mr-2 h-4 w-4" />
+                            Back to All Roadmaps
+                        </Link>
+                    </Button>
+                </motion.div>
             </header>
             
             <div className="flex-grow w-full border border-border rounded-lg bg-panel/50 backdrop-blur-sm relative overflow-hidden">
                 <svg width="100%" height="100%" style={{ position: 'absolute', top: 0, left: 0 }}>
-                    <defs>
-                        <linearGradient id="line-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                        <stop offset="0%" stopColor="hsl(var(--primary))" />
-                        <stop offset="100%" stopColor="hsl(var(--secondary))" />
-                        </linearGradient>
-                    </defs>
                     <AnimatePresence>
                         {roadmap.nodes.map(node => {
-                            const parent = node.parent_node_id ? nodePositions[node.parent_node_id] : null;
-                            if (parent) {
-                                return <Line key={`${parent.id}-${node.id}`} fromNode={parent} toNode={node} />;
-                            }
-                            return null;
+                            if (!node.parent_node_id) return null;
+                            
+                            const parents = node.parent_node_id.split(',');
+                            return parents.map(parentId => {
+                                const parent = nodePositions[parentId];
+                                if (parent) {
+                                    const isParentCompleted = getNodeStatus(parentId, userProgress) === 'completed';
+                                    return <Line key={`${parent.id}-${node.id}`} fromNode={parent} toNode={node} isCompleted={isParentCompleted} />;
+                                }
+                                return null;
+                            });
                         })}
                     </AnimatePresence>
                 </svg>
@@ -166,22 +180,27 @@ export default function RoadmapViewPage({ params }: { params: { roadmapId: strin
                                         <button
                                             onClick={() => handleNodeClick(node, status)}
                                             className={cn(
-                                                "w-24 h-24 rounded-full flex flex-col items-center justify-center p-2 text-center transition-all duration-300 border-2 shadow-lg",
-                                                status === 'completed' && "bg-primary/20 border-primary text-primary-foreground",
-                                                status === 'unlocked' && "bg-secondary/20 border-secondary text-secondary-foreground animate-pulse cursor-pointer hover:scale-110 hover:border-secondary",
-                                                status === 'locked' && "bg-muted/30 border-dashed border-border text-muted-foreground cursor-not-allowed"
+                                                "w-28 h-28 rounded-full flex flex-col items-center justify-center p-2 text-center transition-all duration-300 border-4 shadow-lg",
+                                                status === 'completed' && "bg-primary/20 border-primary text-primary-foreground shadow-primary-glow",
+                                                status === 'unlocked' && "bg-secondary/20 border-secondary text-secondary-foreground animate-pulse cursor-pointer hover:scale-110 hover:shadow-secondary-glow",
+                                                status === 'locked' && "bg-muted/20 border-border border-dashed text-muted-foreground cursor-not-allowed"
                                             )}
                                         >
-                                            <div className="mb-1">
-                                                {status === 'completed' && <Check className="w-6 h-6" />}
-                                                {status === 'unlocked' && <Sparkles className="w-6 h-6" />}
-                                                {status === 'locked' && <Lock className="w-6 h-6" />}
-                                            </div>
-                                            <span className="text-xs font-semibold leading-tight">{node.title}</span>
+                                            <motion.div
+                                                initial={{ scale: 0 }}
+                                                animate={{ scale: 1 }}
+                                                transition={{ delay: 0.5 }}
+                                                className="mb-1"
+                                            >
+                                                {status === 'completed' && <Check className="w-8 h-8" />}
+                                                {status === 'unlocked' && <Sparkles className="w-8 h-8" />}
+                                                {status === 'locked' && <Lock className="w-8 h-8" />}
+                                            </motion.div>
+                                            <span className="text-sm font-semibold leading-tight">{node.title}</span>
                                         </button>
                                     </TooltipTrigger>
-                                    <TooltipContent>
-                                        <p className="font-bold">{node.title}</p>
+                                    <TooltipContent className="bg-panel border-border backdrop-blur-md">
+                                        <p className="font-bold text-lg text-primary">{node.title}</p>
                                         <p className="capitalize text-sm text-muted-foreground">{status}</p>
                                     </TooltipContent>
                                 </Tooltip>

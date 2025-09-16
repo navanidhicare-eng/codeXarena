@@ -74,7 +74,8 @@ export default {
         sm: 'calc(var(--radius) - 4px)',
       },
       boxShadow: {
-        'primary-glow': '0 0 15px hsla(var(--primary), 0.8)',
+        'primary-glow': '0 0 20px hsla(var(--primary), 0.7)',
+        'secondary-glow': '0 0 20px hsla(var(--secondary), 0.7)',
         'success-glow': '0 0 15px hsla(var(--success), 0.8)',
       },
       keyframes: {
