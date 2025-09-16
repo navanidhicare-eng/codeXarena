@@ -15,10 +15,10 @@ import {
 } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
-const difficultyColors = {
-  Beginner: 'bg-green-500/20 text-green-400 border-green-500/30',
-  Intermediate: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30',
-  Advanced: 'bg-red-500/20 text-red-400 border-red-500/30',
+const difficultyColors: { [key: string]: string } = {
+  Beginner: 'bg-green-100 text-green-800 border-green-300',
+  Intermediate: 'bg-yellow-100 text-yellow-800 border-yellow-300',
+  Advanced: 'bg-red-100 text-red-800 border-red-300',
 };
 
 export default function RoadmapsHubPage() {
@@ -32,7 +32,7 @@ export default function RoadmapsHubPage() {
             className="flex items-center justify-between mb-8"
         >
             <div>
-                <h1 className="text-4xl font-headline font-bold bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text">
+                <h1 className="text-4xl font-bold text-gray-800">
                     Learning Roadmaps
                 </h1>
                 <p className="text-muted-foreground mt-2">
@@ -55,11 +55,11 @@ export default function RoadmapsHubPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
             >
-                <Card className="bg-panel backdrop-blur-md border border-border hover:border-primary/50 transition-all duration-300 flex flex-col h-full">
+                <Card className="bg-card border border-border hover:border-primary/50 transition-all duration-300 flex flex-col h-full shadow-sm hover:shadow-lg">
                     <CardHeader>
                         <div className="flex justify-between items-start">
-                             <CardTitle className="text-2xl font-headline text-primary">{roadmap.title}</CardTitle>
-                             <Badge className={cn("shrink-0", difficultyColors[roadmap.difficulty])}>
+                             <CardTitle className="text-2xl text-gray-800">{roadmap.title}</CardTitle>
+                             <Badge className={cn("shrink-0", difficultyColors[roadmap.difficulty])} variant="outline">
                                 {roadmap.difficulty}
                              </Badge>
                         </div>
@@ -67,7 +67,7 @@ export default function RoadmapsHubPage() {
                     </CardHeader>
                     <div className="flex-grow" />
                     <CardFooter>
-                        <Button asChild className="w-full">
+                        <Button asChild className="w-full bg-primary hover:bg-primary/90">
                             <Link href={`/roadmaps/${roadmap.id}`}>
                                 Start Learning <ArrowRight className="ml-2 h-4 w-4" />
                             </Link>

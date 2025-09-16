@@ -10,9 +10,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Github, Loader2 } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
+import Link from 'next/link';
+import { Map, User } from 'lucide-react';
 
 const GoogleIcon = () => (
-    <svg className="h-5 w-5" viewBox="0 0 24 24">
+    <svg className="h-5 w-5 mr-3" viewBox="0 0 24 24">
         <path
         d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
         fill="#4285F4"
@@ -33,7 +35,7 @@ const GoogleIcon = () => (
 );
 
 const AppleIcon = () => (
-    <svg className="h-5 w-5" viewBox="0 0 24 24">
+    <svg className="h-5 w-5 mr-3" viewBox="0 0 24 24">
         <path
         d="M12.01,2.09c-2.31-0.02-4.23,1.02-5.48,2.58c-1.33,1.65-1.74,4.2-1.2,6.33c1.23,0.12,2.5,0.72,3.75-0.12 c1-0.67,1.8-1.87,1.75-3.21c-0.02-1.39-1.03-2.52-2.12-2.88c0.75-1.22,2.08-2.01,3.58-1.99c0.23,0,0.44,0.02,0.67,0.06 c-0.13,0.38-0.2,0.78-0.2,1.19c0,1.87,1.19,3.3,2.8,3.95c1.4,0.56,2.89,0.7,4.24,0.33c0.1-1.4-0.34-2.83-1.12-3.88 c-1.22-1.63-3.02-2.75-5.15-2.75"
         fill="currentColor"
@@ -50,7 +52,7 @@ const PasswordStrengthIndicator = ({ strength }: { strength: number }) => {
         { color: "bg-destructive", active: strength >= 1 },
         { color: "bg-destructive", active: strength >= 2 },
         { color: "bg-yellow-500", active: strength >= 3 },
-        { color: "bg-success", active: strength >= 4 },
+        { color: "bg-green-500", active: strength >= 4 },
     ];
 
     return (
@@ -59,7 +61,7 @@ const PasswordStrengthIndicator = ({ strength }: { strength: number }) => {
             <div
             key={index}
             className={`flex-1 rounded-full transition-colors ${
-                segment.active ? segment.color : "bg-muted/50"
+                segment.active ? segment.color : "bg-muted"
             }`}
             />
         ))}
@@ -99,7 +101,8 @@ export default function AuthPage() {
             if (loginEmail === 'admin@gmail.com' && loginPassword === 'admin') {
                 toast({
                     title: "Login Successful",
-                    description: "Welcome back, admin!",
+                    description: "Welcome back!",
+                    className: "bg-green-100 text-green-800 border-green-300"
                 });
                 router.push('/home');
             } else {
@@ -114,7 +117,7 @@ export default function AuthPage() {
     };
     
     return (
-        <div className="min-h-screen w-full bg-background grid grid-cols-1 md:grid-cols-2">
+        <div className="min-h-screen w-full bg-background grid grid-cols-1 md:grid-cols-2 dark">
             <div className="relative flex-col items-center justify-center hidden md:flex">
                 <Image
                     src="https://picsum.photos/seed/future-ui/1200/1800"
@@ -139,7 +142,21 @@ export default function AuthPage() {
                 </motion.div>
             </div>
 
-            <div className="flex items-center justify-center p-4 sm:p-8">
+            <div className="flex items-center justify-center p-4 sm:p-8 dark">
+                 <div className="absolute top-6 right-6 flex items-center gap-4">
+                    <Button asChild variant="outline" size="icon" className="rounded-full h-12 w-12 border-secondary/50 hover:bg-secondary/10">
+                        <Link href="/roadmaps">
+                            <Map className="h-6 w-6 text-secondary" />
+                            <span className="sr-only">Roadmaps</span>
+                        </Link>
+                    </Button>
+                    <Button asChild variant="outline" size="icon" className="rounded-full h-12 w-12 border-primary/50 hover:bg-primary/10">
+                    <Link href="/profile">
+                        <User className="h-6 w-6 text-primary" />
+                        <span className="sr-only">Profile</span>
+                    </Link>
+                    </Button>
+                </div>
                 <motion.div 
                     initial={{ opacity: 0, y: 50 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -147,7 +164,7 @@ export default function AuthPage() {
                     className="w-full max-w-md"
                 >
                     <Tabs defaultValue="login" className="w-full" onValueChange={setView}>
-                        <h2 className="text-3xl font-bold font-headline text-center text-foreground mb-2">
+                        <h2 className="text-3xl font-bold text-center text-foreground mb-2">
                             {view === "login" ? "Welcome Back" : "Join the Battle"}
                         </h2>
                         <p className="text-center text-muted-foreground mb-6">
@@ -159,13 +176,13 @@ export default function AuthPage() {
                         </TabsList>
                         
                         <div className="space-y-4 mb-6">
-                            <Button variant="outline" className="w-full h-12 text-base border-border hover:bg-accent/50 hover:border-primary/50 transition-all duration-300 transform hover:scale-105">
+                            <Button variant="outline" className="w-full h-12 text-base justify-center">
                                 <GoogleIcon /> Continue with Google
                             </Button>
-                            <Button variant="outline" className="w-full h-12 text-base border-border hover:bg-accent/50 hover:border-primary/50 transition-all duration-300 transform hover:scale-105">
-                                <Github /> Continue with Github
+                             <Button variant="outline" className="w-full h-12 text-base justify-center">
+                                <Github className="mr-3"/> Continue with Github
                             </Button>
-                            <Button variant="outline" className="w-full h-12 text-base border-border hover:bg-accent/50 hover:border-primary/50 transition-all duration-300 transform hover:scale-105">
+                             <Button variant="outline" className="w-full h-12 text-base justify-center">
                                 <AppleIcon /> Continue with Apple
                             </Button>
                         </div>
@@ -236,4 +253,3 @@ export default function AuthPage() {
         </div>
     );
 }
-
