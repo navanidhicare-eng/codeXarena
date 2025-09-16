@@ -27,7 +27,7 @@ export function BadgeDisplay({ badges }: BadgeDisplayProps) {
   return (
     <div className="bg-panel backdrop-blur-md border border-primary/20 rounded-lg p-6">
        <TooltipProvider>
-            <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            <div className="grid grid-cols-4 sm:grid-cols-5 lg:grid-cols-4 xl:grid-cols-5 gap-3">
                 {badges.map((badge, index) => (
                     <motion.div
                         key={badge.id}
@@ -38,19 +38,19 @@ export function BadgeDisplay({ badges }: BadgeDisplayProps) {
                         <Tooltip>
                             <TooltipTrigger asChild>
                                 <div className={cn(
-                                    "aspect-square rounded-full flex items-center justify-center p-2 transition-all duration-300",
+                                    "aspect-square rounded-full flex items-center justify-center p-1 transition-all duration-300",
                                     badge.earned ? "bg-primary/20 border-2 border-primary/50" : "bg-muted/50 border-2 border-dashed border-border"
                                 )}>
                                     {badge.earned ? (
                                         <Image
                                             src={badge.imageUrl}
                                             alt={badge.name}
-                                            width={64}
-                                            height={64}
+                                            width={48}
+                                            height={48}
                                             className="transform hover:scale-110 transition-transform"
                                         />
                                     ) : (
-                                        <Lock className="w-8 h-8 text-muted-foreground" />
+                                        <Lock className="w-6 h-6 text-muted-foreground" />
                                     )}
                                 </div>
                             </TooltipTrigger>
