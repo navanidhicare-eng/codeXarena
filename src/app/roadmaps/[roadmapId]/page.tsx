@@ -62,14 +62,14 @@ const DottedLine = ({ from, to }: { from: RoadmapNode, to: RoadmapNode }) => {
     );
 };
 
-export default function RoadmapViewPage({ params }: { params: { roadmapId: string } }) {
+export default function RoadmapViewPage({ params: { roadmapId } }: { params: { roadmapId: string } }) {
   const [roadmap, setRoadmap] = useState<Roadmap | null>(null);
   const [userProgress, setUserProgress] = useState(initialUserProgress);
   const [nodePositions, setNodePositions] = useState<{ [key: string]: RoadmapNode }>({});
   const [groupedNodes, setGroupedNodes] = useState<GroupedNodes>({});
 
   useEffect(() => {
-    const fetchedRoadmap = getRoadmapById(params.roadmapId);
+    const fetchedRoadmap = getRoadmapById(roadmapId);
     if (fetchedRoadmap) {
       setRoadmap(fetchedRoadmap);
       
@@ -112,7 +112,7 @@ export default function RoadmapViewPage({ params }: { params: { roadmapId: strin
     } else {
       notFound();
     }
-  }, [params.roadmapId]);
+  }, [roadmapId]);
 
 
   const handleNodeClick = (node: RoadmapNode, status: NodeStatus) => {
