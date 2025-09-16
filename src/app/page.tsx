@@ -28,6 +28,7 @@ export default function LandingPage() {
 
     const handleCreateRoom = (playerName: string) => {
         if (!playerName.trim()) return;
+        // The actual navigation will be handled by the onRoomCreated listener in AppContext
         createRoom(playerName.trim());
     }
 

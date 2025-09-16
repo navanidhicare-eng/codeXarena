@@ -140,6 +140,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
                 title: 'Could Not Join Room',
                 description: error,
             });
+            router.push('/');
         });
     }, [router, toast]);
 

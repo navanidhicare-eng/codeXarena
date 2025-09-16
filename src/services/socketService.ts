@@ -22,8 +22,12 @@ const connect = (name: string, url: string) => {
     console.log('Socket.IO connected:', socket.id);
   });
 
-  socket.on('disconnect', () => {
-    console.log('Socket.IO disconnected');
+  socket.on('disconnect', (reason) => {
+    console.log('Socket.IO disconnected:', reason);
+  });
+
+  socket.on('connect_error', (err) => {
+    console.error('Socket.IO connection error:', err.message);
   });
 
   return socket;
@@ -54,6 +58,7 @@ const emitSendEmoji = (emoji: string) => {
 // Rooms
 const emitCreateRoom = (options: any) => {
     if (!socket) return;
+    console.log("Emitting room:create", options);
     socket.emit('room:create', options);
 }
 
