@@ -41,7 +41,7 @@ export function FinalCTA({ onEnterArena }: FinalCTAProps) {
                     disabled={!playerName.trim()}
                     className="h-14 text-lg font-bold bg-primary hover:bg-primary/90 shadow-primary-glow"
                 >
-                    Enter the Arena
+                    Find Match
                     <Swords className="ml-2 h-5 w-5" />
                 </Button>
             </div>

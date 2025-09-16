@@ -4,16 +4,17 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Swords } from 'lucide-react';
+import { Swords, Users } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
 
 type LandingHeroProps = {
   onEnterArena: (playerName: string) => void;
+  onCreateRoom: (playerName: string) => void;
 };
 
-export function LandingHero({ onEnterArena }: LandingHeroProps) {
+export function LandingHero({ onEnterArena, onCreateRoom }: LandingHeroProps) {
   const [playerName, setPlayerName] = useState('');
 
   return (
@@ -62,7 +63,7 @@ export function LandingHero({ onEnterArena }: LandingHeroProps) {
                 The first real-time multiplayer coding arena. Challenge friends, get AI hints, and prove your skills in live head-to-head battles.
             </p>
 
-            <div className="flex w-full max-w-md items-center space-x-2">
+            <div className="flex w-full max-w-lg items-center space-x-2">
                 <Input
                     type="text"
                     placeholder="Enter Your Gladiator Name"
@@ -73,14 +74,26 @@ export function LandingHero({ onEnterArena }: LandingHeroProps) {
                         if (e.key === 'Enter') onEnterArena(playerName)
                     }}
                 />
-                <Button
+            </div>
+             <div className="flex gap-4 mt-2">
+                 <Button
                     size="lg"
                     onClick={() => onEnterArena(playerName)}
                     disabled={!playerName.trim()}
                     className="h-14 text-lg font-bold bg-primary hover:bg-primary/90 shadow-primary-glow"
                 >
-                    Enter the Arena
+                    Find Match
                     <Swords className="ml-2 h-5 w-5" />
+                </Button>
+                <Button
+                    size="lg"
+                    variant="secondary"
+                    onClick={() => onCreateRoom(playerName)}
+                    disabled={!playerName.trim()}
+                    className="h-14 text-lg font-bold shadow-secondary-glow"
+                >
+                    Create Room
+                    <Users className="ml-2 h-5 w-5" />
                 </Button>
             </div>
         </motion.div>
