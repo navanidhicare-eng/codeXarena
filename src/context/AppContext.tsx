@@ -2,7 +2,7 @@
 
 import React, { createContext, useState, useCallback, useEffect, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import mockSocketService from '@/services/mockSocketService';
+import socketService from '@/services/socketService';
 
 type Language = "javascript" | "python" | "java" | "cpp";
 
@@ -73,27 +73,70 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
 
     const connectAndJoin = (name: string) => {
         setPlayerName(name);
-        mockSocketService.connect(name);
-        mockSocketService.joinMatchmaking();
+        const socket = socketService.connect(name, process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001');
+        
+        socketService.onMatchFound((newGameState: Omit<GameState, 'matchId'>) => {
+            console.log("Match found, updating state:", newGameState);
+            // The server should provide the matchId now
+            const fullGameState = { ...newGameState, matchId: (newGameState as any).id };
+            setGameState(fullGameState);
+            router.push(`/arena/${fullGameState.matchId}`);
+        });
+
+        socketService.onStateUpdate((updatedGameState: GameState) => {
+            console.log("State updated:", updatedGameState);
+            setGameState(updatedGameState);
+        });
+
+        socketService.onGameOver((gameOverState: { winner: string }) => {
+            console.log("Game over:", gameOverState);
+            setWinner(gameOverState.winner);
+        });
+
+        socketService.onHintResult((hintResult: { hint: string }) => {
+            setHint(hintResult.hint);
+            setIsHintLoading(false);
+        });
+
+        socketService.onHintError((error: { message: string }) => {
+            console.error(error.message);
+            // Optionally, show a toast to the user
+            setIsHintLoading(false);
+        });
+
+        socketService.onEmojiReceive((data: { emoji: string }) => {
+            console.log('Emoji received:', data.emoji);
+            setOpponentEmoji(data.emoji);
+            setTimeout(() => setOpponentEmoji(null), 2000);
+        });
+        
+        socketService.joinMatchmaking();
     };
 
     const createRoom = (options: any) => {
         setPlayerName(options.playerName);
-        mockSocketService.connect(options.playerName);
-        mockSocketService.emitCreateRoom(options);
+        const socket = socketService.connect(options.playerName, process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001');
+
+        socketService.onRoomCreated(({ roomId }) => {
+            console.log('Room created, navigating to:', roomId);
+            router.push(`/room/${roomId}`);
+        });
+
+        // Add other room-related listeners here if needed
     }
 
     const joinRoom = (roomId: string) => {
-        mockSocketService.emitJoinRoom(roomId);
+        // Assuming player name is already set and connected
+        socketService.emitJoinRoom(roomId);
     }
     
     const emitRunCode = (code: string) => {
-        mockSocketService.emitRunCode(code);
+        socketService.emitRunCode(code);
     };
 
     const emitGetHint = () => {
         setIsHintLoading(true);
-        mockSocketService.emitGetHint();
+        socketService.emitGetHint();
     };
     
     const clearHint = () => {
@@ -101,50 +144,9 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const sendEmoji = (emoji: string) => {
-        mockSocketService.emitSendEmoji(emoji);
+        socketService.emitSendEmoji(emoji);
     };
 
-    useEffect(() => {
-        mockSocketService.onRoomCreated(({ roomId }) => {
-            console.log('Room created, navigating to:', roomId);
-            router.push(`/room/${roomId}`);
-        });
-        
-        mockSocketService.onMatchFound((newGameState: Omit<GameState, 'matchId'>) => {
-            console.log("Match found, updating state:", newGameState);
-            const matchId = `mock-room-${Math.random().toString(36).substring(7)}`;
-            const fullGameState = { ...newGameState, matchId };
-            setGameState(fullGameState);
-            router.push(`/arena/${matchId}`);
-        });
-
-        mockSocketService.onStateUpdate((updatedGameState: GameState) => {
-            console.log("State updated:", updatedGameState);
-            setGameState(updatedGameState);
-        });
-
-        mockSocketService.onGameOver((gameOverState: { winner: string }) => {
-            console.log("Game over:", gameOverState);
-            setWinner(gameOverState.winner);
-        });
-
-        mockSocketService.onHintResult((hintResult: { hint: string }) => {
-            setHint(hintResult.hint);
-            setIsHintLoading(false);
-        });
-
-        mockSocketService.onHintError((error: { error: string }) => {
-            console.error(error.error);
-            setIsHintLoading(false);
-        });
-
-        mockSocketService.onEmojiReceive((data: { emoji: string }) => {
-            console.log('Emoji received:', data.emoji);
-            setOpponentEmoji(data.emoji);
-            setTimeout(() => setOpponentEmoji(null), 2000);
-        });
-
-    }, [router]);
 
     return (
         <AppContext.Provider value={{ 
