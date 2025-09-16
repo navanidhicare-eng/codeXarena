@@ -101,7 +101,7 @@ export default function HomePage() {
                 CodeXarena
             </h1>
             <p className="font-headline text-secondary text-xl mt-2">
-                Stop Grinding. Start Battling.
+                Rise Code Dominate
             </p>
         </div>
 
