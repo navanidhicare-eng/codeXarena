@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { getRoadmapById, userProgress as initialUserProgress, Roadmap, RoadmapNode, NodeStatus, NodeType } from '@/lib/mock-roadmaps-data';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
-import { notFound, useParams } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { RoadmapNodeComponent } from '@/components/RoadmapNode';
 
@@ -27,7 +27,7 @@ const Line = ({ fromNode, toNode, isCompleted }: { fromNode: RoadmapNode, toNode
       y1={`${fromNode.position_y}%`}
       x2={`${toNode.position_x}%`}
       y2={`${toNode.position_y}%`}
-      stroke={isCompleted ? "#3b82f6" : "#cbd5e1"}
+      stroke={isCompleted ? "hsl(var(--primary))" : "#cbd5e1"}
       strokeWidth="2"
       strokeDasharray={isCompleted ? "0" : "4 4"}
       initial={{ pathLength: 0 }}
@@ -51,7 +51,7 @@ const DottedLine = ({ from, to }: { from: RoadmapNode, to: RoadmapNode }) => {
     return (
         <motion.path
             d={path}
-            stroke="#3b82f6"
+            stroke="hsl(var(--primary))"
             strokeWidth="2"
             strokeDasharray="1 5"
             fill="transparent"
@@ -64,13 +64,14 @@ const DottedLine = ({ from, to }: { from: RoadmapNode, to: RoadmapNode }) => {
 
 export default function RoadmapViewPage() {
   const params = useParams();
-  const roadmapId = params.roadmapId as string;
+  const roadmapId = Array.isArray(params.roadmapId) ? params.roadmapId[0] : params.roadmapId;
   const [roadmap, setRoadmap] = useState<Roadmap | null>(null);
   const [userProgress, setUserProgress] = useState(initialUserProgress);
   const [nodePositions, setNodePositions] = useState<{ [key: string]: RoadmapNode }>({});
   const [groupedNodes, setGroupedNodes] = useState<GroupedNodes>({});
 
   useEffect(() => {
+    if (!roadmapId) return;
     const fetchedRoadmap = getRoadmapById(roadmapId);
     if (fetchedRoadmap) {
       setRoadmap(fetchedRoadmap);
@@ -111,8 +112,6 @@ export default function RoadmapViewPage() {
       }
       setUserProgress(newProgress);
 
-    } else {
-      notFound();
     }
   }, [roadmapId]);
 
@@ -150,7 +149,7 @@ export default function RoadmapViewPage() {
     <div className="min-h-screen bg-background text-foreground p-4 sm:p-6 lg:p-8 flex flex-col">
         <header className="flex items-center justify-between mb-8 flex-shrink-0">
             <motion.div initial={{ opacity: 0, x: -50 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
-                <h1 className="text-4xl font-bold text-gray-800">
+                <h1 className="text-4xl font-bold text-foreground">
                     {roadmap.title}
                 </h1>
             </motion.div>
@@ -164,11 +163,11 @@ export default function RoadmapViewPage() {
             </motion.div>
         </header>
         
-        <div className="flex-grow w-full border border-border rounded-lg bg-white relative overflow-auto p-8">
+        <div className="flex-grow w-full border border-border rounded-lg bg-card relative overflow-auto p-8">
             <svg width="100%" height="100%" style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}>
                 <defs>
                     <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto">
-                        <polygon points="0 0, 10 3.5, 0 7" fill="#3b82f6" />
+                        <polygon points="0 0, 10 3.5, 0 7" fill="hsl(var(--primary))" />
                     </marker>
                 </defs>
                 <AnimatePresence>
@@ -197,11 +196,11 @@ export default function RoadmapViewPage() {
                         ))
                     })}
                      {/* Connect grouped nodes to their core concept */}
-                     <DottedLine from={nodePositions['dsa-lang-syntax']} to={nodePositions['dsa-fundamentals']} />
-                     <DottedLine from={nodePositions['dsa-control-structures']} to={nodePositions['dsa-fundamentals']} />
-                     <DottedLine from={nodePositions['dsa-pseudo-code']} to={nodePositions['dsa-fundamentals']} />
-                     <DottedLine from={nodePositions['dsa-functions']} to={nodePositions['dsa-fundamentals']} />
-                     <DottedLine from={nodePositions['dsa-oop-basics']} to={nodePositions['dsa-fundamentals']} />
+                     <DottedLine key="line-1" from={nodePositions['dsa-lang-syntax']} to={nodePositions['dsa-fundamentals']} />
+                     <DottedLine key="line-2" from={nodePositions['dsa-control-structures']} to={nodePositions['dsa-fundamentals']} />
+                     <DottedLine key="line-3" from={nodePositions['dsa-pseudo-code']} to={nodePositions['dsa-fundamentals']} />
+                     <DottedLine key="line-4" from={nodePositions['dsa-functions']} to={nodePositions['dsa-fundamentals']} />
+                     <DottedLine key="line-5" from={nodePositions['dsa-oop-basics']} to={nodePositions['dsa-fundamentals']} />
 
                 </AnimatePresence>
             </svg>
