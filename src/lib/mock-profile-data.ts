@@ -85,7 +85,7 @@ export const mockBadgeData = [
   },
   {
     id: 'legend',
-    name: 'CodeVerse Legend',
+    name: 'CodeXarena Legend',
     description: 'Reach level 50.',
     imageUrl: 'https://picsum.photos/seed/badge8/64/64',
     earned: false,

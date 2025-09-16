@@ -32,7 +32,7 @@ export default function RoadmapsHubPage() {
             className="flex items-center justify-between mb-8"
         >
             <div>
-                <h1 className="text-4xl font-bold text-gray-800">
+                <h1 className="text-4xl font-bold text-foreground">
                     Learning Roadmaps
                 </h1>
                 <p className="text-muted-foreground mt-2">
@@ -58,7 +58,7 @@ export default function RoadmapsHubPage() {
                 <Card className="bg-card border border-border hover:border-primary/50 transition-all duration-300 flex flex-col h-full shadow-sm hover:shadow-lg">
                     <CardHeader>
                         <div className="flex justify-between items-start">
-                             <CardTitle className="text-2xl text-gray-800">{roadmap.title}</CardTitle>
+                             <CardTitle className="text-2xl text-foreground">{roadmap.title}</CardTitle>
                              <Badge className={cn("shrink-0", difficultyColors[roadmap.difficulty])} variant="outline">
                                 {roadmap.difficulty}
                              </Badge>

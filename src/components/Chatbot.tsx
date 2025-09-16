@@ -29,7 +29,7 @@ export function Chatbot() {
     {
       id: "initial-message",
       role: "assistant",
-      text: "Hello! I'm your CodeVerse assistant. How can I help you navigate the app or solve any problems?",
+      text: "Hello! I'm your CodeXarena assistant. How can I help you navigate the app or solve any problems?",
     },
   ]);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -122,7 +122,7 @@ export function Chatbot() {
               <header className="p-4 border-b border-secondary/20 flex items-center gap-2">
                 <Sparkles className="text-secondary w-5 h-5" />
                 <h3 className="font-headline font-semibold text-foreground">
-                  CodeVerse Assistant
+                  CodeXarena Assistant
                 </h3>
               </header>
 

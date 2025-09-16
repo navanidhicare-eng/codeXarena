@@ -121,7 +121,7 @@ export default function AuthPage() {
             <div className="relative flex-col items-center justify-center hidden md:flex">
                 <Image
                     src="https://picsum.photos/seed/future-ui/1200/1800"
-                    alt="CodeVerse Arena"
+                    alt="CodeXarena Arena"
                     fill
                     objectFit="cover"
                     className="opacity-20"
@@ -134,7 +134,7 @@ export default function AuthPage() {
                     className="relative z-10 bg-black/30 backdrop-blur-sm p-8 rounded-xl border border-primary/20 shadow-2xl shadow-primary/20"
                 >
                     <h1 className="font-headline font-bold text-6xl bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text" style={{ textShadow: '0 0 15px hsla(var(--primary), 0.5)' }}>
-                        CodeVerse
+                        CodeXarena
                     </h1>
                     <p className="font-headline text-secondary text-xl mt-2">
                         Stop Grinding. Start Battling.

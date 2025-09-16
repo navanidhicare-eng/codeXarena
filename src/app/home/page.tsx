@@ -94,7 +94,7 @@ export default function HomePage() {
       <div className="w-full flex flex-col items-center justify-center gap-8 pt-20 md:pt-28">
         <div className="text-center">
              <h1 className="font-headline font-bold text-6xl bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text" style={{ textShadow: '0 0 15px hsla(var(--primary), 0.5)' }}>
-                CodeVerse
+                CodeXarena
             </h1>
             <p className="font-headline text-secondary text-xl mt-2">
                 Stop Grinding. Start Battling.
