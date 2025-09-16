@@ -4,9 +4,10 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ArrowRight, Swords } from 'lucide-react';
+import { Swords } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
+import Link from 'next/link';
 
 type LandingHeroProps = {
   onEnterArena: (playerName: string) => void;
@@ -17,6 +18,20 @@ export function LandingHero({ onEnterArena }: LandingHeroProps) {
 
   return (
     <section className="relative w-full min-h-screen flex flex-col items-center justify-center text-center p-4 overflow-hidden">
+        <header className="absolute top-0 left-0 right-0 p-4 z-20 flex justify-between items-center">
+            <Link href="/" className="text-2xl font-headline text-foreground hover:text-primary transition-colors">
+                CodeXarena
+            </Link>
+            <nav className="flex gap-6">
+                <Button asChild variant="link" className="text-foreground font-bold hover:text-primary transition-colors">
+                    <Link href="/roadmaps">Roadmaps</Link>
+                </Button>
+                <Button asChild variant="link" className="text-foreground font-bold hover:text-primary transition-colors">
+                    <Link href="/profile">Profile</Link>
+                </Button>
+            </nav>
+        </header>
+
         {/* Background Video/Image */}
         <div className="absolute inset-0 w-full h-full bg-black z-0">
             <Image
