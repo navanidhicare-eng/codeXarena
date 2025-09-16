@@ -4,7 +4,7 @@ import { useState, useContext } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, User, Swords, Plus, LogIn, Map } from "lucide-react";
+import { Loader2, User, Swords, Plus, LogIn, Map, ChevronDown, Trophy } from "lucide-react";
 import { AppContext } from "@/context/AppContext";
 import Link from "next/link";
 import {
@@ -18,6 +18,8 @@ import {
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { LeaderboardView } from "@/components/LeaderboardView";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { motion } from 'framer-motion';
 
 
 export default function HomePage() {
@@ -32,6 +34,7 @@ export default function HomePage() {
   const [isPrivate, setIsPrivate] = useState(false);
   const [roomPassword, setRoomPassword] = useState("");
   const [joinRoomId, setJoinRoomId] = useState("");
+  const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false);
 
   const handleQuickMatch = () => {
     if (!playerNameInput.trim() || isLoading) return;
@@ -150,7 +153,23 @@ export default function HomePage() {
         </div>
 
         <div className="w-full max-w-4xl mt-12">
-            <LeaderboardView />
+           <Collapsible open={isLeaderboardOpen} onOpenChange={setIsLeaderboardOpen}>
+                <CollapsibleTrigger asChild>
+                    <motion.button 
+                        className="w-full flex items-center justify-center gap-3 text-xl font-headline text-primary/80 hover:text-primary transition-colors"
+                        whileHover={{ scale: 1.02 }}
+                    >
+                        <Trophy className="w-6 h-6" />
+                        <span>View Global Rankings</span>
+                        <ChevronDown className={`w-6 h-6 transition-transform ${isLeaderboardOpen ? 'rotate-180' : ''}`} />
+                    </motion.button>
+                </CollapsibleTrigger>
+                <CollapsibleContent>
+                    <div className="mt-4">
+                        <LeaderboardView />
+                    </div>
+                </CollapsibleContent>
+            </Collapsible>
         </div>
     </div>
       
