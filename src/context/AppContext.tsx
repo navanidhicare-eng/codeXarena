@@ -79,7 +79,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
     const [opponentEmoji, setOpponentEmoji] = useState<string | null>(null);
     const [roomPlayers, setRoomPlayers] = useState<string[]>([]);
     const [isRoomAdmin, setIsRoomAdmin] = useState(false);
-    const [actionQueue, setActionQueue] = useState<(() => void) | null>(null);
+    const [actionQueue, setActionQueue] = useState<(() => void)[]>([]);
 
     const router = useRouter();
     const { toast } = useToast();
@@ -91,10 +91,9 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
 
         socket.on('connect', () => {
             console.log('Socket.IO connected:', socket.id);
-            if (actionQueue) {
-                actionQueue();
-                setActionQueue(null);
-            }
+            // Execute any pending actions
+            actionQueue.forEach(action => action());
+            setActionQueue([]);
         });
 
         socketService.onMatchFound((newGameState: Omit<GameState, 'matchId'>) => {
@@ -158,16 +157,13 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         });
         
         // No dependencies, so this runs once on mount.
-    }, [router, toast, actionQueue]);
+    }, [router, toast]); // actionQueue removed from dependencies
 
     const performWhenConnected = (action: () => void) => {
         if (socketService.isConnected()) {
             action();
         } else {
-            setActionQueue(() => action);
-            // Re-trigger connection if not connected. This is a safeguard.
-            const socketUrl = window.location.origin;
-            socketService.connect(socketUrl);
+            setActionQueue(prev => [...prev, action]);
         }
     };
 
@@ -193,7 +189,6 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
 
     const joinRoom = (name: string, roomId: string) => {
         updatePlayerNameAndThen(name, () => {
-            router.push(`/room/${roomId}`);
             socketService.emitJoinRoom(roomId);
         });
     }

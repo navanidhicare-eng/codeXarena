@@ -5,7 +5,7 @@ import { toast } from '@/hooks/use-toast';
 let socket: Socket;
 
 const connect = (url: string) => {
-  if (socket && socket.connected) {
+  if (socket) {
     return socket;
   }
   
@@ -23,7 +23,7 @@ const connect = (url: string) => {
     toast({
         variant: 'destructive',
         title: 'Connection Error',
-        description: `Could not connect to the server. Is it running at ${url}?`,
+        description: `Could not connect to the server. Is it running?`,
     })
   });
 
