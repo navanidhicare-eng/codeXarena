@@ -86,7 +86,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
     useEffect(() => {
         // This effect runs once on the client to establish the socket connection.
         const isLocalhost = typeof window !== 'undefined' && window.location.hostname === 'localhost';
-        const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || (isLocalhost ? 'http://localhost:3001' : window.location.origin);
+        const socketUrl = isLocalhost ? 'http://localhost:3001' : window.location.origin;
         
         socketService.connect(socketUrl);
 
@@ -170,8 +170,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
             socketService.emitUpdatePlayerName(name);
             action();
         } else {
-            // If not connected, the service will queue the name update and action.
-            socketService.connect(window.location.origin);
+            // Wait for connection to be established
             socketService.on('connect', () => {
                 socketService.emitUpdatePlayerName(name);
                 action();
@@ -242,5 +241,3 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         </AppContext.Provider>
     );
 };
-
-    

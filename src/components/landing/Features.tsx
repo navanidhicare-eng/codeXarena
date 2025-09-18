@@ -56,6 +56,7 @@ export function Features() {
                                     src={feature.imageUrl}
                                     alt={feature.headline}
                                     fill
+                                    sizes="(max-width: 768px) 100vw, 50vw"
                                     className="rounded-lg object-cover border-2 border-border shadow-lg"
                                     data-ai-hint={feature.imageHint}
                                 />
