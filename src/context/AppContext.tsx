@@ -146,7 +146,8 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
 
     const getConnectedSocket = useCallback((name: string) => {
         setPlayerName(name);
-        const socket = socketService.connect(name, process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001');
+        const socketUrl = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3001';
+        const socket = socketService.connect(name, socketUrl);
         setupSocketListeners(socket);
         return socket;
     }, [setupSocketListeners]);
