@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Swords, Users, LogIn, Bug, Shield, Calendar } from 'lucide-react';
@@ -16,9 +16,52 @@ type LandingHeroProps = {
   onJoinRoom: (playerName: string, roomId: string) => void;
 };
 
+const Typewriter = ({ text }: { text: string }) => {
+    const [displayedText, setDisplayedText] = useState('');
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [loopNum, setLoopNum] = useState(0);
+    const [typingSpeed, setTypingSpeed] = useState(150);
+
+    useEffect(() => {
+        const handleTyping = () => {
+            setDisplayedText(text.substring(0, displayedText.length + 1));
+            if (displayedText === text) {
+                setTimeout(() => setIsDeleting(true), 2000);
+            }
+        };
+
+        const timer = setTimeout(handleTyping, typingSpeed);
+        return () => clearTimeout(timer);
+    }, [displayedText, text, typingSpeed]);
+
+    return (
+        <h1 className="font-headline font-bold text-3xl sm:text-4xl md:text-5xl text-foreground whitespace-nowrap">
+            {displayedText}
+            <span className="animate-pulse">|</span>
+        </h1>
+    )
+}
+
+
 export function LandingHero({ onEnterArena, onCreateRoom, onJoinRoom }: LandingHeroProps) {
   const [playerName, setPlayerName] = useState('');
   const [isJoinModalOpen, setJoinModalOpen] = useState(false);
+  const fullText = "Code, Battle, Learn.";
+  const [text, setText] = useState('');
+  
+  useEffect(() => {
+    let i = 0;
+    const typingInterval = setInterval(() => {
+      if (i < fullText.length) {
+        setText(prev => prev + fullText.charAt(i));
+        i++;
+      } else {
+        clearInterval(typingInterval);
+      }
+    }, 120);
+    return () => clearInterval(typingInterval);
+  }, [fullText]);
+
 
   const handleJoin = (roomId: string) => {
     if (!playerName.trim() || !roomId.trim()) return;
@@ -72,8 +115,9 @@ export function LandingHero({ onEnterArena, onCreateRoom, onJoinRoom }: LandingH
               transition={{ duration: 0.8, ease: 'easeOut' }}
               className="relative z-10 flex flex-col items-center gap-4"
           >
-              <h1 className="font-headline font-bold text-3xl sm:text-4xl md:text-5xl text-foreground whitespace-nowrap">
-                  Code, Battle, Learn.
+              <h1 className="font-headline font-bold text-3xl sm:text-4xl md:text-5xl text-foreground whitespace-nowrap h-16">
+                  {text}
+                  <span className="animate-pulse">|</span>
               </h1>
               <h2 className="font-headline font-bold text-2xl md:text-3xl text-primary">
                   The Arena Waits
