@@ -86,9 +86,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
 
     useEffect(() => {
         // This ensures the socket connection only happens on the client side.
-        const hostname = window.location.hostname;
-        const socketUrl = hostname === 'localhost' ? 'http://localhost:3001' : window.location.origin;
-
+        const socketUrl = window.location.origin;
         const socket = socketService.connect(socketUrl);
 
         socket.on('connect', () => {
