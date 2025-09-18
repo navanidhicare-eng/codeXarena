@@ -1,13 +1,23 @@
 "use client";
 
+import { useState } from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Calendar, MapPin, Trophy } from 'lucide-react';
+import { Calendar, MapPin, Trophy, Hourglass, Bookmark } from 'lucide-react';
 import type { Event } from '@/lib/mock-events-data';
+import { cn } from '@/lib/utils';
 
 export function EventPoster({ event, index }: { event: Event, index: number }) {
+  const [isSaved, setIsSaved] = useState(event.saved);
+
+  const handleSaveClick = (e: React.MouseEvent) => {
+    e.preventDefault(); // Prevents link navigation if the card is wrapped in <a>
+    e.stopPropagation();
+    setIsSaved(!isSaved);
+  };
+
   return (
     <motion.div
         initial={{ opacity: 0, y: 50, rotateZ: (Math.random() - 0.5) * 4 }}
@@ -26,6 +36,9 @@ export function EventPoster({ event, index }: { event: Event, index: number }) {
              {/* Tack */}
             <div className="absolute top-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-[#4a4a4a] rounded-full pixel-box-inset" />
 
+            {/* Date Badge */}
+            <Badge className="absolute top-3 right-3 font-pixel pixel-box bg-red-700/80 text-white border-red-900">{event.date}</Badge>
+
             <div className="relative w-full h-32">
                 <Image 
                     src={event.headerImageUrl} 
@@ -43,6 +56,7 @@ export function EventPoster({ event, index }: { event: Event, index: number }) {
                     <div className="flex items-center gap-2"><Calendar className="w-4 h-4"/><span>{event.date}</span></div>
                     <div className="flex items-center gap-2"><MapPin className="w-4 h-4"/><span>{event.location}</span></div>
                     {event.prizePool && <div className="flex items-center gap-2"><Trophy className="w-4 h-4"/><span>{event.prizePool}</span></div>}
+                    <div className="flex items-center gap-2 text-amber-800 font-bold"><Hourglass className="w-4 h-4"/><span>Register by: {event.registrationDeadline}</span></div>
                  </div>
 
                  <p className="font-body text-sm text-[#3a2d1d] mb-4 flex-grow">{event.description}</p>
@@ -53,9 +67,22 @@ export function EventPoster({ event, index }: { event: Event, index: number }) {
                     ))}
                  </div>
                  
-                 <Button className="w-full mt-auto pixel-box bg-emerald-600 hover:bg-emerald-500 text-white h-12 text-lg">
-                    Learn More
-                 </Button>
+                 <div className="flex items-center gap-2 mt-auto">
+                    <Button className="w-full pixel-box bg-emerald-600 hover:bg-emerald-500 text-white h-12 text-lg">
+                        Register
+                    </Button>
+                    <Button 
+                        size="icon" 
+                        variant="outline"
+                        onClick={handleSaveClick}
+                        className={cn(
+                            "pixel-box h-12 w-14 text-white",
+                            isSaved ? "bg-yellow-500 hover:bg-yellow-400" : "bg-gray-500 hover:bg-gray-400"
+                        )}
+                    >
+                        <Bookmark className={cn("transition-transform", isSaved && "fill-current")} />
+                    </Button>
+                 </div>
             </div>
         </div>
     </motion.div>

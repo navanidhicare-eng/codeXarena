@@ -2,14 +2,14 @@
 
 import Link from 'next/link';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button';
+import { Button } from '@/components/ui/button';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { mockEventsData } from "@/lib/mock-events-data";
 import { EventPoster } from "@/components/EventPoster";
 import { ArrowRight, Megaphone } from "lucide-react";
 
 export function UpcomingEvents() {
-    const featuredEvents = mockEventsData.slice(0, 3);
+    const featuredEvents = mockEventsData.slice(0, 4);
 
     return (
         <div className="w-full max-w-7xl mx-auto">
