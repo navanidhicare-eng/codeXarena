@@ -13,7 +13,6 @@ export interface BugHuntChallenge {
   buggyCode: {
     [key in BugHuntLanguage]?: string;
   };
-  bugTypeHint?: string;
 }
 
 const findProblemByTitle = (title: string): Problem | undefined => {
@@ -24,6 +23,9 @@ const findProblemByTitle = (title: string): Problem | undefined => {
 const twoSumProblem = findProblemByTitle('Two Sum');
 const fizzBuzzProblem = findProblemByTitle('FizzBuzz');
 const isPalindromeProblem = findProblemByTitle('Is Palindrome');
+const reverseStringProblem = findProblemByTitle('Reverse String');
+const validParenthesesProblem = findProblemByTitle('Valid Parentheses');
+
 
 export const bugHuntChallenges: BugHuntChallenge[] = [
   {
@@ -38,7 +40,6 @@ export const bugHuntChallenges: BugHuntChallenge[] = [
   for (let i = 0; i < nums.length; i++) {
     const complement = target - nums[i];
     if (numMap.has(complement)) {
-      // Bug: Should return indices, not values
       return [complement, nums[i]];
     }
     numMap.set(nums[i], i);
@@ -50,12 +51,10 @@ export const bugHuntChallenges: BugHuntChallenge[] = [
   for i, num in enumerate(nums):
     complement = target - num
     if complement in num_map:
-      # Bug: Should not return the same index twice
       return [i, i]
     num_map[num] = i
   return []`
     },
-    bugTypeHint: 'Incorrect return value',
   },
   {
     id: 'bh-002',
@@ -67,7 +66,6 @@ export const bugHuntChallenges: BugHuntChallenge[] = [
       javascript: `function fizzBuzz() {
   const result = [];
   for (let i = 1; i <= 100; i++) {
-    // Bug: Order of checks is wrong. 'FizzBuzz' condition will never be met.
     if (i % 3 === 0) {
       result.push("Fizz");
     } else if (i % 5 === 0) {
@@ -81,7 +79,6 @@ export const bugHuntChallenges: BugHuntChallenge[] = [
   return result;
 };`
     },
-    bugTypeHint: 'Logical error in conditional statements',
   },
   {
     id: 'bh-003',
@@ -95,7 +92,6 @@ export const bugHuntChallenges: BugHuntChallenge[] = [
   
   const s = x.toString();
   let reversed = "";
-  // Bug: Off-by-one error in loop condition
   for (let i = s.length; i >= 0; i--) {
     reversed += s[i];
   }
@@ -106,10 +102,58 @@ export const bugHuntChallenges: BugHuntChallenge[] = [
     return False
   
   s = str(x)
-  # Bug: Slice should be [::-1] to reverse correctly
   return s == s[:-1]`
     },
-    bugTypeHint: 'Off-by-one error',
+  },
+  {
+    id: 'bh-004',
+    problemId: reverseStringProblem?.title || 'Reverse String',
+    difficulty: 'Easy',
+    xpReward: 60,
+    availableLanguages: ['javascript'],
+    buggyCode: {
+      javascript: `function reverseString(s) {
+  let left = 0;
+  let right = s.length - 1;
+  while (left < right) {
+    const temp = s[left];
+    s[left] = s[right];
+    s[right] = temp;
+    left++;
+  }
+  return s;
+};`
+    },
+  },
+  {
+    id: 'bh-005',
+    problemId: validParenthesesProblem?.title || 'Valid Parentheses',
+    difficulty: 'Medium',
+    xpReward: 120,
+    availableLanguages: ['javascript'],
+    buggyCode: {
+      javascript: `function isValid(s) {
+    const stack = [];
+    const map = {
+        "(": ")",
+        "[": "]",
+        "{": "}"
+    };
+
+    for (let i = 0; i < s.length; i++) {
+        const char = s[i];
+        if (map[char]) {
+            stack.push(char);
+        } else {
+            const lastOpen = stack.pop();
+            if (char !== map[lastOpen]) {
+                return false;
+            }
+        }
+    }
+    return true;
+};`
+    },
   }
 ];
 

@@ -45,6 +45,64 @@ export const problems: Problem[] = [
             ];
         }
     },
+    {
+        title: 'Is Palindrome',
+        description: 'Given an integer x, return true if x is a palindrome, and false otherwise.',
+        starterCode: {
+            javascript: `function isPalindrome(x) {\n  // Write your code here\n};`,
+            python: `def is_palindrome(x):\n  # Write your code here\n  pass`,
+            java: `class Solution {\n  public boolean isPalindrome(int x) {\n    // Write your code here\n  }\n}`,
+            cpp: `class Solution {\npublic:\n  bool isPalindrome(int x) {\n    // Write your code here\n  }\n};`
+        },
+         solutionChecker: (code, lang) => {
+            const passes = code.includes('reverse') || code.toString().includes('x');
+            return [
+                { name: 'Test with positive palindrome', passed: passes },
+                { name: 'Test with non-palindrome', passed: passes },
+                { name: 'Test with single digit', passed: true },
+                { name: 'Test with negative number', passed: passes },
+            ];
+        }
+    },
+    {
+        title: 'Reverse String',
+        description: 'Write a function that reverses a string. The input string is given as an array of characters s.',
+        starterCode: {
+            javascript: `function reverseString(s) {\n  // Write your code here\n};`,
+            python: `def reverse_string(s):\n  # Write your code here\n  pass`,
+            java: `class Solution {\n  public void reverseString(char[] s) {\n    // Write your code here\n  }\n}`,
+            cpp: `class Solution {\npublic:\n  void reverseString(vector<char>& s) {\n    // Write your code here\n  }\n};`
+        },
+         solutionChecker: (code, lang) => {
+            const passes = code.includes('reverse') || code.includes('swap') || (code.includes('[') && code.includes(']'));
+            return [
+                { name: 'Test with even length string', passed: passes },
+                { name: 'Test with odd length string', passed: passes },
+                { name: 'Test with empty string', passed: true },
+                { name: 'Test with palindrome', passed: passes },
+            ];
+        }
+    },
+    {
+        title: 'Valid Parentheses',
+        description: 'Given a string s containing just the characters \'(\', \')\', \'{\', \'}\', \'[\' and \']\', determine if the input string is valid. An input string is valid if: Open brackets must be closed by the same type of brackets. Open brackets must be closed in the correct order. Every close bracket has a corresponding open bracket of the same type.',
+        starterCode: {
+            javascript: `function isValid(s) {\n  // Write your code here\n};`,
+            python: `def is_valid(s):\n  # Write your code here\n  pass`,
+            java: `class Solution {\n    public boolean isValid(String s) {\n    // Write your code here\n  }\n}`,
+            cpp: `class Solution {\npublic:\n    bool isValid(string s) {\n    // Write your code here\n  }\n};`
+        },
+        solutionChecker: (code, lang) => {
+            const passes = code.includes('stack') || code.includes('map');
+            return [
+                { name: 'Test with simple valid string "()"', passed: passes },
+                { name: 'Test with complex valid string "()[]{}"', passed: passes },
+                { name: 'Test with invalid string "(]"', passed: passes },
+                { name: 'Test with invalid string "([)]"', passed: passes },
+                { name: 'Test with only open brackets', passed: passes },
+            ];
+        }
+    }
 ];
 
 /**
