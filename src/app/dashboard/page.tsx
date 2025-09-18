@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { DailyTasks } from "@/components/DailyTasks";
 import { LeaderboardView } from "@/components/LeaderboardView";
-import { UpcomingEvents }s from "@/components/UpcomingEvents";
+import { UpcomingEvents } from "@/components/UpcomingEvents";
 import { PixelatedBackground } from "@/components/PixelatedBackground";
 
 export default function DashboardPage() {
