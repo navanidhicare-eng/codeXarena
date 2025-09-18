@@ -2,171 +2,147 @@
 import { io, Socket } from 'socket.io-client';
 import { toast } from '@/hooks/use-toast';
 
-let socket: Socket;
+class SocketService {
+  socket!: Socket;
 
-const connect = (url: string) => {
-  if (socket) {
-    return socket;
-  }
-  
-  socket = io(url, {
-    transports: ['websocket'],
-    autoConnect: true,
-  });
-
-  socket.on('disconnect', (reason) => {
-    console.log('Socket.IO disconnected:', reason);
-  });
-
-  socket.on('connect_error', (err) => {
-    console.error('Socket.IO connection error:', err.message);
-    toast({
-        variant: 'destructive',
-        title: 'Connection Error',
-        description: `Could not connect to the server. Is it running?`,
-    })
-  });
-
-  return socket;
-};
-
-const disconnect = () => {
-    if (socket) {
-        socket.disconnect();
+  connect(url: string) {
+    if (this.socket) {
+      return;
     }
-};
+    
+    this.socket = io(url, {
+      transports: ['websocket'],
+      autoConnect: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 2000,
+    });
 
-const isConnected = () => {
-    return socket && socket.connected;
+    this.socket.on('disconnect', (reason) => {
+      console.log('Socket.IO disconnected:', reason);
+      if (reason !== 'io client disconnect') {
+         toast({
+          variant: 'destructive',
+          title: 'Disconnected',
+          description: 'You have been disconnected from the server.',
+        });
+      }
+    });
+
+    this.socket.on('connect_error', (err) => {
+      console.error('Socket.IO connection error:', err.message);
+      toast({
+          variant: 'destructive',
+          title: 'Connection Error',
+          description: `Could not connect to the server. Is it running?`,
+      })
+    });
+  }
+
+  disconnect() {
+      if (this.socket) {
+          this.socket.disconnect();
+      }
+  }
+
+  isConnected() {
+      return this.socket && this.socket.connected;
+  }
+
+  emitUpdatePlayerName(name: string) {
+      if (!this.socket) return;
+      this.socket.emit('player:updateName', { playerName: name });
+  }
+
+  joinMatchmaking() {
+      if (!this.socket) return;
+      this.socket.emit('matchmaking:join');
+  }
+
+  emitRunCode(code: string) {
+      if (!this.socket) return;
+      this.socket.emit('battle:runCode', { code });
+  }
+
+  emitGetHint() {
+      if (!this.socket) return;
+      this.socket.emit('battle:getHint');
+  }
+
+  emitSendEmoji(emoji: string) {
+      if (!this.socket) return;
+      this.socket.emit('battle:sendEmoji', { emoji });
+  }
+
+  emitCreateRoom() {
+      if (!this.socket) return;
+      this.socket.emit('room:create');
+  }
+
+  emitJoinRoom(roomId: string) {
+      if (!this.socket) return;
+      this.socket.emit('room:join', { roomId });
+  }
+
+  emitStartBattle(roomId: string) {
+      if (!this.socket) return;
+      this.socket.emit('room:start_battle', { roomId });
+  }
+
+  // --- LISTENERS ---
+  private on(event: string, callback: (...args: any[]) => void) {
+    if (!this.socket) return;
+    this.socket.off(event).on(event, callback);
+  }
+
+  onNameUpdated(callback: () => void) {
+      this.on('player:nameUpdated', callback);
+  };
+
+  onMatchFound(callback: (data: any) => void) {
+    this.on('matchmaking:success', callback);
+  };
+
+  onMatchFoundForRoom(callback: (data: any) => void) {
+    this.on('room:match_found', callback);
+  }
+
+  onStateUpdate(callback: (data: any) => void) {
+    this.on('battle:stateUpdate', callback);
+  };
+
+  onGameOver(callback: (data: any) => void) {
+    this.on('battle:gameOver', callback);
+  }
+
+  onHintResult(callback: (data: any) => void) {
+    this.on('battle:hintResult', callback);
+  }
+
+  onHintError(callback: (data: any) => void) {
+    this.on('battle:hintError', callback);
+  }
+
+  onEmojiReceive(callback: (data: any) => void) {
+    this.on('battle:emojiReceive', callback);
+  }
+
+  onRoomCreated(callback: (data: any) => void) {
+    this.on('room:created', callback);
+  }
+
+  onRoomUpdated(callback: (data: any) => void) {
+    this.on('room:updated', callback);
+  }
+
+  onRoomJoinFailed(callback: (data: { error: string }) => void) {
+    this.on('room:join_failed', callback);
+  }
+
+  on(event: string, callback: (...args: any[]) => void) {
+    if (!this.socket) return;
+    this.socket.on(event, callback);
+  }
 }
 
-const emitUpdatePlayerName = (name: string) => {
-    if (!socket) return;
-    socket.emit('player:updateName', { playerName: name });
-}
-
-// Quick Match
-const joinMatchmaking = () => {
-    if (!socket) return;
-    socket.emit('matchmaking:join');
-}
-
-// In-Game
-const emitRunCode = (code: string) => {
-    if (!socket) return;
-    socket.emit('battle:runCode', { code });
-}
-
-const emitGetHint = () => {
-    if (!socket) return;
-    socket.emit('battle:getHint');
-}
-
-const emitSendEmoji = (emoji: string) => {
-    if (!socket) return;
-    socket.emit('battle:sendEmoji', { emoji });
-}
-
-// Rooms
-const emitCreateRoom = () => {
-    if (!socket) return;
-    socket.emit('room:create');
-}
-
-const emitJoinRoom = (roomId: string) => {
-    if (!socket) return;
-    socket.emit('room:join', { roomId });
-}
-
-const emitStartBattle = (roomId: string) => {
-    if (!socket) return;
-    socket.emit('room:start_battle', { roomId });
-}
-
-
-// --- LISTENERS ---
-
-const onNameUpdated = (callback: () => void) => {
-    if (!socket) return;
-    socket.off('player:nameUpdated').on('player:nameUpdated', callback);
-};
-
-const onMatchFound = (callback: (data: any) => void) => {
-  if (!socket) return;
-  socket.off('matchmaking:success').on('matchmaking:success', callback);
-};
-
-const onMatchFoundForRoom = (callback: (data: any) => void) => {
-  if (!socket) return;
-  socket.off('room:match_found').on('room:match_found', callback);
-}
-
-const onStateUpdate = (callback: (data: any) => void) => {
-  if (!socket) return;
-  socket.off('battle:stateUpdate').on('battle:stateUpdate', callback);
-};
-
-const onGameOver = (callback: (data: any) => void) => {
-    if (!socket) return;
-    socket.off('battle:gameOver').on('battle:gameOver', callback);
-}
-
-const onHintResult = (callback: (data: any) => void) => {
-    if(!socket) return;
-    socket.off('battle:hintResult').on('battle:hintResult', callback);
-}
-
-const onHintError = (callback: (data: any) => void) => {
-    if(!socket) return;
-    socket.off('battle:hintError').on('battle:hintError', callback);
-}
-
-const onEmojiReceive = (callback: (data: any) => void) => {
-    if(!socket) return;
-    socket.off('battle:emojiReceive').on('battle:emojiReceive', callback);
-}
-
-const onRoomCreated = (callback: (data: any) => void) => {
-    if (!socket) return;
-    socket.off('room:created').on('room:created', callback);
-}
-
-const onRoomUpdated = (callback: (data: any) => void) => {
-    if(!socket) return;
-    socket.off('room:updated').on('room:updated', callback);
-}
-
-const onRoomJoinFailed = (callback: (data: { error: string }) => void) => {
-    if(!socket) return;
-    socket.off('room:join_failed').on('room:join_failed', callback);
-}
-
-
-const socketService = {
-  connect,
-  disconnect,
-  isConnected,
-  // Emitters
-  emitUpdatePlayerName,
-  joinMatchmaking,
-  emitRunCode,
-  emitGetHint,
-  emitSendEmoji,
-  emitCreateRoom,
-  emitJoinRoom,
-  emitStartBattle,
-  // Listeners
-  onNameUpdated,
-  onMatchFound,
-  onMatchFoundForRoom,
-  onStateUpdate,
-  onGameOver,
-  onHintResult,
-  onHintError,
-  onEmojiReceive,
-  onRoomCreated,
-  onRoomUpdated,
-  onRoomJoinFailed,
-};
-
+const socketService = new SocketService();
 export default socketService;

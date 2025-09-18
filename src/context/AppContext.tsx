@@ -85,26 +85,26 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
     const { toast } = useToast();
 
     useEffect(() => {
-        // This ensures the socket connection only happens on the client side.
-        const socketUrl = window.location.origin;
-        const socket = socketService.connect(socketUrl);
+        const isLocalhost = typeof window !== 'undefined' && window.location.hostname === 'localhost';
+        const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || (isLocalhost ? 'http://localhost:3001' : window.location.origin);
 
-        socket.on('connect', () => {
-            console.log('Socket.IO connected:', socket.id);
-            // On connect, if there's a player name from a previous state, update it.
-            const currentPN = (AppContext as any)._currentValue.playerName;
+        socketService.connect(socketUrl);
+
+        socketService.on('connect', () => {
+            console.log('Socket.IO connected:', socketService.socket.id);
+            // On re-connect, if there's a player name from a previous state, update it.
+             const currentPN = (AppContext as any)._currentValue.playerName;
             if (currentPN) {
                 socketService.emitUpdatePlayerName(currentPN);
             }
         });
 
-        socketService.onMatchFound((newGameState: Omit<GameState, 'matchId'>) => {
+        socketService.onMatchFound((newGameState: GameState) => {
             console.log("Match found, updating state:", newGameState);
-            const fullGameState = { ...newGameState, matchId: (newGameState as any).id };
-            setGameState(fullGameState);
-            router.push(`/arena/${fullGameState.matchId}`);
+            setGameState(newGameState);
+            router.push(`/arena/${newGameState.matchId}`);
         });
-
+        
         socketService.onMatchFoundForRoom((newGameState: GameState) => {
             console.log("Room match found, updating state:", newGameState);
             setGameState(newGameState);
@@ -128,6 +128,11 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         });
 
         socketService.onHintError((error: { message: string }) => {
+            toast({
+                variant: "destructive",
+                title: "AI Hint Error",
+                description: "Could not generate a hint at this time.",
+            });
             console.error(error.message);
             setIsHintLoading(false);
         });
@@ -160,6 +165,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         
         socketService.onNameUpdated(() => {
             // Once name is confirmed by server, process the action queue
+            console.log("Player name confirmed by server. Processing action queue.");
             actionQueue.forEach(action => action());
             setActionQueue([]);
         });
@@ -171,12 +177,17 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
 
     const performWhenConnected = (name: string, action: () => void) => {
         setPlayerName(name);
-        // Add the action to the queue
-        setActionQueue(prev => [...prev, action]);
         
-        // Update name on server. onNameUpdated will trigger the queue.
         if (socketService.isConnected()) {
             socketService.emitUpdatePlayerName(name);
+            setActionQueue(prev => [...prev, action]);
+        } else {
+            // Queue the name update itself if not connected, then the action.
+            console.log("Socket not connected. Queuing name update and action.");
+            toast({
+                title: "Connecting...",
+                description: "Trying to establish connection with the server."
+            });
         }
     };
 
