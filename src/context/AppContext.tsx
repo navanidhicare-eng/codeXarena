@@ -158,7 +158,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const createRoom = (playerName: string) => {
-        const socket = getConnectedSocket(playerName);
+        getConnectedSocket(playerName);
         socketService.emitCreateRoom({ playerName });
     }
 
