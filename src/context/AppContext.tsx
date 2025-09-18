@@ -85,11 +85,19 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
     const { toast } = useToast();
 
     useEffect(() => {
-        const socketUrl = window.location.origin;
+        // This ensures the socket connection only happens on the client side.
+        const hostname = window.location.hostname;
+        const socketUrl = hostname === 'localhost' ? 'http://localhost:3001' : window.location.origin;
+
         const socket = socketService.connect(socketUrl);
 
         socket.on('connect', () => {
             console.log('Socket.IO connected:', socket.id);
+            // On connect, if there's a player name from a previous state, update it.
+            const currentPN = (AppContext as any)._currentValue.playerName;
+            if (currentPN) {
+                socketService.emitUpdatePlayerName(currentPN);
+            }
         });
 
         socketService.onMatchFound((newGameState: Omit<GameState, 'matchId'>) => {
@@ -153,6 +161,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         });
         
         socketService.onNameUpdated(() => {
+            // Once name is confirmed by server, process the action queue
             actionQueue.forEach(action => action());
             setActionQueue([]);
         });
@@ -164,19 +173,20 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
 
     const performWhenConnected = (name: string, action: () => void) => {
         setPlayerName(name);
+        // Add the action to the queue
         setActionQueue(prev => [...prev, action]);
+        
+        // Update name on server. onNameUpdated will trigger the queue.
         if (socketService.isConnected()) {
             socketService.emitUpdatePlayerName(name);
-        } else {
-             // The on('connect') listener will handle updating the name
         }
     };
 
     const connectAndJoin = (name: string) => {
         performWhenConnected(name, () => {
             socketService.joinMatchmaking();
+            router.push('/matchmaking');
         });
-        router.push('/matchmaking');
     };
 
     const createRoom = (name: string) => {
