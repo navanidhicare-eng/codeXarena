@@ -6,15 +6,15 @@ class SocketService {
   socket!: Socket;
 
   connect(url: string) {
-    if (this.socket) {
+    if (this.socket && this.socket.connected) {
       return;
     }
     
     this.socket = io(url, {
       transports: ['websocket'],
-      autoConnect: true,
       reconnectionAttempts: 5,
       reconnectionDelay: 2000,
+      timeout: 10000,
     });
 
     this.socket.on('disconnect', (reason) => {
@@ -23,7 +23,7 @@ class SocketService {
          toast({
           variant: 'destructive',
           title: 'Disconnected',
-          description: 'You have been disconnected from the server.',
+          description: 'Connection to the server was lost. Please refresh.',
         });
       }
     });
@@ -89,7 +89,7 @@ class SocketService {
   }
 
   // --- LISTENERS ---
-  private on(event: string, callback: (...args: any[]) => void) {
+  on(event: string, callback: (...args: any[]) => void) {
     if (!this.socket) return;
     this.socket.off(event).on(event, callback);
   }
@@ -137,12 +137,9 @@ class SocketService {
   onRoomJoinFailed(callback: (data: { error: string }) => void) {
     this.on('room:join_failed', callback);
   }
-
-  on(event: string, callback: (...args: any[]) => void) {
-    if (!this.socket) return;
-    this.socket.on(event, callback);
-  }
 }
 
 const socketService = new SocketService();
 export default socketService;
+
+    

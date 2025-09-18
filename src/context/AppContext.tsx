@@ -79,24 +79,19 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
     const [opponentEmoji, setOpponentEmoji] = useState<string | null>(null);
     const [roomPlayers, setRoomPlayers] = useState<string[]>([]);
     const [isRoomAdmin, setIsRoomAdmin] = useState(false);
-    const [actionQueue, setActionQueue] = useState<(() => void)[]>([]);
 
     const router = useRouter();
     const { toast } = useToast();
 
     useEffect(() => {
+        // This effect runs once on the client to establish the socket connection.
         const isLocalhost = typeof window !== 'undefined' && window.location.hostname === 'localhost';
         const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || (isLocalhost ? 'http://localhost:3001' : window.location.origin);
-
+        
         socketService.connect(socketUrl);
 
         socketService.on('connect', () => {
             console.log('Socket.IO connected:', socketService.socket.id);
-            // On re-connect, if there's a player name from a previous state, update it.
-             const currentPN = (AppContext as any)._currentValue.playerName;
-            if (currentPN) {
-                socketService.emitUpdatePlayerName(currentPN);
-            }
         });
 
         socketService.onMatchFound((newGameState: GameState) => {
@@ -163,49 +158,42 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
             router.push('/');
         });
         
-        socketService.onNameUpdated(() => {
-            // Once name is confirmed by server, process the action queue
-            console.log("Player name confirmed by server. Processing action queue.");
-            actionQueue.forEach(action => action());
-            setActionQueue([]);
-        });
-
+        // Return a cleanup function to disconnect the socket when the component unmounts.
         return () => {
             socketService.disconnect();
         };
-    }, [router, toast, actionQueue]); 
+    }, [router, toast]); 
 
-    const performWhenConnected = (name: string, action: () => void) => {
+    const performAction = (name: string, action: () => void) => {
         setPlayerName(name);
-        
         if (socketService.isConnected()) {
             socketService.emitUpdatePlayerName(name);
-            setActionQueue(prev => [...prev, action]);
+            action();
         } else {
-            // Queue the name update itself if not connected, then the action.
-            console.log("Socket not connected. Queuing name update and action.");
-            toast({
-                title: "Connecting...",
-                description: "Trying to establish connection with the server."
-            });
+            // If not connected, the service will queue the name update and action.
+            socketService.connect(window.location.origin);
+            socketService.on('connect', () => {
+                socketService.emitUpdatePlayerName(name);
+                action();
+            })
         }
     };
 
     const connectAndJoin = (name: string) => {
-        performWhenConnected(name, () => {
+        performAction(name, () => {
             socketService.joinMatchmaking();
             router.push('/matchmaking');
         });
     };
 
     const createRoom = (name: string) => {
-        performWhenConnected(name, () => {
+        performAction(name, () => {
              socketService.emitCreateRoom();
         });
     }
 
     const joinRoom = (name: string, roomId: string) => {
-        performWhenConnected(name, () => {
+        performAction(name, () => {
             socketService.emitJoinRoom(roomId);
         });
     }
@@ -254,3 +242,5 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         </AppContext.Provider>
     );
 };
+
+    
