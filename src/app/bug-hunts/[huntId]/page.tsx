@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { getBugHuntById, getProblemForBugHunt } from '@/lib/bug-hunts-data';
+import { getBugHuntById, getProblemForBugHunt, bugHuntChallenges } from '@/lib/bug-hunts-data';
 import type { BugHuntChallenge, BugHuntLanguage } from '@/lib/bug-hunts-data';
 import type { Problem } from '@/server/types';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -10,7 +10,7 @@ import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { TestCasesPanel } from '@/components/TestCasesPanel';
-import { Check, FlaskConical, BookOpen, Bug, FileCode, X } from 'lucide-react';
+import { Check, FlaskConical, BookOpen, Bug, FileCode, X, RefreshCw } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
@@ -54,6 +54,17 @@ export default function BugHuntArena() {
     if (hunt && hunt.buggyCode[lang]) {
         setSelectedLanguage(lang);
         setCode(hunt.buggyCode[lang]!);
+    }
+  };
+
+  const handleSkip = () => {
+    const otherHunts = bugHuntChallenges.filter(h => h.id !== huntId);
+    if (otherHunts.length > 0) {
+        const randomHunt = otherHunts[Math.floor(Math.random() * otherHunts.length)];
+        router.push(`/bug-hunts/${randomHunt.id}`);
+    } else {
+        // Fallback if there's only one hunt
+        router.push('/bug-hunts');
     }
   };
 
@@ -112,9 +123,14 @@ export default function BugHuntArena() {
                     <h2 className="text-4xl text-emerald-400 font-bold mb-4">Case Closed!</h2>
                     <p className="text-lg text-white mb-2">You successfully squashed the bug.</p>
                     <p className="text-2xl text-yellow-400 font-bold mb-6">+{hunt.xpReward} XP Gained</p>
-                    <Button asChild className="pixel-box bg-emerald-600 hover:bg-emerald-500 text-white h-12 text-lg">
-                        <Link href="/bug-hunts">Back to Bounty Board</Link>
-                    </Button>
+                    <div className="flex gap-4">
+                        <Button onClick={handleSkip} className="pixel-box bg-blue-600 hover:bg-blue-500 text-white h-12 text-lg">
+                           Next Challenge
+                        </Button>
+                        <Button asChild className="pixel-box bg-gray-600 hover:bg-gray-500 text-white h-12 text-lg">
+                            <Link href="/bug-hunts">Back to Bug Hunts</Link>
+                        </Button>
+                    </div>
                 </motion.div>
             </motion.div>
         )}
@@ -122,17 +138,23 @@ export default function BugHuntArena() {
 
         <header className="pixel-box bg-[#332a21] p-4 flex justify-between items-center text-white">
             <h1 className="text-2xl flex items-center gap-2"><Bug /> Bug Hunt: {problem.title}</h1>
-             <div className="flex gap-2">
-                {hunt.availableLanguages.map(lang => (
-                    <Button 
-                        key={lang}
-                        onClick={() => handleLanguageChange(lang)}
-                        className={`pixel-box text-base ${selectedLanguage === lang ? 'bg-emerald-600' : 'bg-gray-600'}`}
-                    >
-                        {lang.toUpperCase()}
-                    </Button>
-                ))}
-             </div>
+            <div className="flex items-center gap-4">
+                 <div className="flex gap-2">
+                    {hunt.availableLanguages.map(lang => (
+                        <Button 
+                            key={lang}
+                            onClick={() => handleLanguageChange(lang)}
+                            className={`pixel-box text-base ${selectedLanguage === lang ? 'bg-emerald-600' : 'bg-gray-600'}`}
+                        >
+                            {lang.toUpperCase()}
+                        </Button>
+                    ))}
+                 </div>
+                 <Button onClick={handleSkip} variant="outline" className="pixel-box bg-blue-600 hover:bg-blue-500 text-white">
+                    <RefreshCw className="mr-2 h-4 w-4"/>
+                    Skip
+                 </Button>
+            </div>
         </header>
         
         <PanelGroup direction="horizontal" className="flex-grow min-h-0">

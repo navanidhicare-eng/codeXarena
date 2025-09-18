@@ -2,7 +2,7 @@ import type { Problem } from '@/server/types';
 import { problems } from '@/server/game-state';
 
 export type BugHuntDifficulty = 'Easy' | 'Medium' | 'Hard';
-export type BugHuntLanguage = 'javascript' | 'python';
+export type BugHuntLanguage = 'javascript' | 'python' | 'java' | 'cpp';
 
 export interface BugHuntChallenge {
   id: string;
@@ -33,7 +33,7 @@ export const bugHuntChallenges: BugHuntChallenge[] = [
     problemId: twoSumProblem?.title || 'Two Sum',
     difficulty: 'Easy',
     xpReward: 75,
-    availableLanguages: ['javascript', 'python'],
+    availableLanguages: ['javascript', 'python', 'cpp'],
     buggyCode: {
       javascript: `function twoSum(nums, target) {
   const numMap = new Map();
@@ -53,7 +53,21 @@ export const bugHuntChallenges: BugHuntChallenge[] = [
     if complement in num_map:
       return [i, i]
     num_map[num] = i
-  return []`
+  return []`,
+      cpp: `class Solution {
+public:
+    vector<int> twoSum(vector<int>& nums, int target) {
+        unordered_map<int, int> num_map;
+        for (int i = 0; i < nums.size(); i++) {
+            int complement = target - nums[i];
+            if (num_map.find(complement) != num_map.end()) {
+                return {i};
+            }
+            num_map[nums[i]] = i;
+        }
+        return {};
+    }
+};`
     },
   },
   {
@@ -61,7 +75,7 @@ export const bugHuntChallenges: BugHuntChallenge[] = [
     problemId: fizzBuzzProblem?.title || 'FizzBuzz',
     difficulty: 'Easy',
     xpReward: 50,
-    availableLanguages: ['javascript'],
+    availableLanguages: ['javascript', 'java'],
     buggyCode: {
       javascript: `function fizzBuzz() {
   const result = [];
@@ -77,7 +91,22 @@ export const bugHuntChallenges: BugHuntChallenge[] = [
     }
   }
   return result;
-};`
+};`,
+      java: `class Solution {
+    public List<String> fizzBuzz(int n) {
+        List<String> answer = new ArrayList<String>();
+        for (int i = 1; i <= n; i++) {
+            if (i % 3 == 0) {
+                answer.add("Fizz");
+            } else if (i % 5 == 0) {
+                answer.add("Buzz");
+            } else {
+                answer.add(Integer.toString(i));
+            }
+        }
+        return answer;
+    }
+}`
     },
   },
   {
@@ -110,7 +139,7 @@ export const bugHuntChallenges: BugHuntChallenge[] = [
     problemId: reverseStringProblem?.title || 'Reverse String',
     difficulty: 'Easy',
     xpReward: 60,
-    availableLanguages: ['javascript'],
+    availableLanguages: ['javascript', 'java'],
     buggyCode: {
       javascript: `function reverseString(s) {
   let left = 0;
@@ -122,7 +151,20 @@ export const bugHuntChallenges: BugHuntChallenge[] = [
     left++;
   }
   return s;
-};`
+};`,
+      java: `class Solution {
+    public void reverseString(char[] s) {
+        int left = 1;
+        int right = s.length - 1;
+        while (left < right) {
+            char temp = s[left];
+            s[left] = s[right];
+            s[right] = temp;
+            left++;
+            right--;
+        }
+    }
+}`
     },
   },
   {
@@ -130,7 +172,7 @@ export const bugHuntChallenges: BugHuntChallenge[] = [
     problemId: validParenthesesProblem?.title || 'Valid Parentheses',
     difficulty: 'Medium',
     xpReward: 120,
-    availableLanguages: ['javascript'],
+    availableLanguages: ['javascript', 'cpp'],
     buggyCode: {
       javascript: `function isValid(s) {
     const stack = [];
@@ -152,6 +194,23 @@ export const bugHuntChallenges: BugHuntChallenge[] = [
         }
     }
     return true;
+};`,
+      cpp: `class Solution {
+public:
+    bool isValid(string s) {
+        stack<char> st;
+        for (char c : s) {
+            if (c == '(' || c == '{' || c == '[') {
+                st.push(c);
+            } else {
+                if (st.empty()) return false;
+                if (c == ')' && st.top() == '(') st.pop();
+                else if (c == '}' && st.top() == '{') st.pop();
+                else if (c == ']' && st.top() == '[') st.pop();
+            }
+        }
+        return st.empty();
+    }
 };`
     },
   }
