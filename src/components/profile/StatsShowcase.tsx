@@ -2,13 +2,13 @@
 
 import * as React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Flame, Percent, Swords, Code } from "lucide-react";
+import { Flame, Percent, Swords, Code, Bug } from "lucide-react";
 import { motion } from "framer-motion";
 
 type StatItem = {
   title: string;
   value: string;
-  icon: React.ReactNode;
+  icon: string;
 };
 
 type StatsShowcaseProps = {
@@ -19,11 +19,11 @@ const iconComponents: { [key: string]: React.FC<any> } = {
     Percent: Percent,
     Swords: Swords,
     Flame: Flame,
-    Code: Code,
+    Code: Bug,
 };
 
 const StatCard = ({ item, index }: { item: StatItem, index: number }) => {
-    const Icon = typeof item.icon === 'string' && iconComponents[item.icon] ? iconComponents[item.icon] : item.icon;
+    const Icon = typeof item.icon === 'string' && iconComponents[item.icon] ? iconComponents[item.icon] : Swords;
 
     return (
         <motion.div
@@ -34,7 +34,7 @@ const StatCard = ({ item, index }: { item: StatItem, index: number }) => {
             <Card className="bg-panel backdrop-blur-md border border-secondary/10 h-full text-center hover:border-secondary/50 transition-all duration-300 transform hover:-translate-y-1">
                 <CardHeader className="flex flex-col items-center justify-center pb-2">
                     <div className="text-secondary mb-2">
-                        {Icon && React.isValidElement(Icon) ? React.cloneElement(Icon as React.ReactElement, { className: 'w-8 h-8'}) : <Swords className="w-8 h-8" />}
+                        <Icon className="w-8 h-8" />
                     </div>
                     <CardTitle className="text-lg font-headline text-muted-foreground">{item.title}</CardTitle>
                 </CardHeader>

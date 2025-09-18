@@ -27,8 +27,8 @@ export const mockStatsData = [
     icon: 'Flame',
   },
   {
-    title: 'Preferred Language',
-    value: 'JS',
+    title: 'Bugs Squashed',
+    value: '17',
     icon: 'Code',
   },
 ];
@@ -49,11 +49,11 @@ export const mockBadgeData = [
     earned: true,
   },
   {
-    id: 'unstoppable',
-    name: 'Unstoppable',
-    description: 'Win 10 battles in a row.',
-    imageUrl: 'https://picsum.photos/seed/badge3/64/64',
-    earned: false,
+    id: 'bug-squasher',
+    name: 'Bug Squasher',
+    description: 'Complete your first Bug Hunt.',
+    imageUrl: 'https://picsum.photos/seed/badge9/64/64',
+    earned: true,
   },
   {
     id: 'polyglot',
@@ -62,7 +62,7 @@ export const mockBadgeData = [
     imageUrl: 'https://picsum.photos/seed/badge4/64/64',
     earned: true,
   },
-    {
+  {
     id: 'centurion',
     name: 'Centurion',
     description: 'Compete in 100 battles.',
@@ -70,13 +70,13 @@ export const mockBadgeData = [
     earned: true,
   },
   {
-    id: 'speed-demon',
-    name: 'Speed Demon',
-    description: 'Solve a problem in under 2 minutes.',
-    imageUrl: 'https://picsum.photos/seed/badge6/64/64',
+    id: 'exterminator',
+    name: 'Exterminator',
+    description: 'Complete 25 Bug Hunts.',
+    imageUrl: 'https://picsum.photos/seed/badge10/64/64',
     earned: false,
   },
-    {
+  {
     id: 'flawless-victory',
     name: 'Flawless Victory',
     description: 'Win a battle without failing a single test case.',
@@ -84,10 +84,38 @@ export const mockBadgeData = [
     earned: true,
   },
   {
-    id: 'legend',
-    name: 'CodeXarena Legend',
-    description: 'Reach level 50.',
-    imageUrl: 'https://picsum.photos/seed/badge8/64/64',
+    id: 'syntax-surgeon',
+    name: 'Syntax Surgeon',
+    description: 'Complete a "Hard" difficulty Bug Hunt.',
+    imageUrl: 'https://picsum.photos/seed/badge11/64/64',
+    earned: true,
+  },
+  {
+    id: 'unstoppable',
+    name: 'Unstoppable',
+    description: 'Win 10 battles in a row.',
+    imageUrl: 'https://picsum.photos/seed/badge3/64/64',
+    earned: false,
+  },
+    {
+    id: 'off-by-one-kenobi',
+    name: 'Off-by-One Kenobi',
+    description: 'Successfully fix 10 off-by-one errors.',
+    imageUrl: 'https://picsum.photos/seed/badge12/64/64',
+    earned: false,
+  },
+  {
+    id: 'recursion-paramedic',
+    name: 'Recursion Paramedic',
+    description: 'Successfully fix 10 broken recursive functions.',
+    imageUrl: 'https://picsum.photos/seed/badge13/64/64',
+    earned: false,
+  },
+  {
+    id: 'the-profiler',
+    name: 'The Profiler',
+    description: 'Complete a bug hunt that requires a performance optimization.',
+    imageUrl: 'https://picsum.photos/seed/badge14/64/64',
     earned: false,
   },
 ];
