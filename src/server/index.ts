@@ -14,8 +14,13 @@ import { getAiHint } from '@/ai/flows/ai-hint-system';
 const players: { [socketId: string]: { name: string; roomId?: string; matchId?: string } } = {};
 
 export function attachSocketServer(server: any) {
-  const io = new Server(server);
-  console.log('Socket.IO server attached and running.');
+  const io = new Server(server, {
+    cors: {
+      origin: "*", // Allow connections from any origin
+      methods: ["GET", "POST"]
+    }
+  });
+  console.log('Socket.IO server attached and running with CORS enabled.');
 
   io.on('connection', (socket: Socket) => {
     console.log('A user connected:', socket.id);
