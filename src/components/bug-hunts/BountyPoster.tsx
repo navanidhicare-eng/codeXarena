@@ -20,8 +20,9 @@ export function BountyPoster({ hunt, index }: { hunt: BugHuntChallenge, index: n
             animate={{ opacity: 1, y: 0, rotateZ: 0 }}
             transition={{ duration: 0.5, delay: index * 0.1 }}
             whileHover={{ scale: 1.05, y: -10, rotateZ: (Math.random() - 0.5) * 2, transition: { duration: 0.2 } }}
+            className="h-full"
         >
-            <Link href={`/bug-hunts/${hunt.id}`} className="block">
+            <Link href={`/bug-hunts/${hunt.id}`} className="block h-full">
                 <div className="h-full bg-[#3a2d1d] border-4 border-[#21180d] rounded-lg p-6 flex flex-col text-center shadow-lg transform transition-transform">
                     <div className="border-b-2 border-dashed border-[#574834] pb-4 mb-4">
                         <h2 className="font-pixel text-xl text-[#f7e097] uppercase">Wanted: Bug</h2>
