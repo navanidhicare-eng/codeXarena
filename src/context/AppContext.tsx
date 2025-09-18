@@ -85,102 +85,117 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
     const { toast } = useToast();
 
     useEffect(() => {
-        const setupSocket = (name: string) => {
+        // This effect runs only once on the client to establish the socket connection.
+        const socketUrl = window.location.origin;
+        const socket = socketService.connect(socketUrl);
+
+        socket.on('connect', () => {
+            console.log('Socket.IO connected:', socket.id);
+            if (actionQueue) {
+                actionQueue();
+                setActionQueue(null);
+            }
+        });
+
+        socketService.onMatchFound((newGameState: Omit<GameState, 'matchId'>) => {
+            console.log("Match found, updating state:", newGameState);
+            const fullGameState = { ...newGameState, matchId: (newGameState as any).id };
+            setGameState(fullGameState);
+            router.push(`/arena/${fullGameState.matchId}`);
+        });
+
+        socketService.onMatchFoundForRoom((newGameState: GameState) => {
+            console.log("Room match found, updating state:", newGameState);
+            setGameState(newGameState);
+            setRoomPlayers([]);
+            router.push(`/arena/${newGameState.matchId}`);
+        });
+
+        socketService.onStateUpdate((updatedGameState: GameState) => {
+            console.log("State updated:", updatedGameState);
+            setGameState(updatedGameState);
+        });
+
+        socketService.onGameOver((gameOverState: { winner: string }) => {
+            console.log("Game over:", gameOverState);
+            setWinner(gameOverState.winner);
+        });
+
+        socketService.onHintResult((hintResult: { hint: string }) => {
+            setHint(hintResult.hint);
+            setIsHintLoading(false);
+        });
+
+        socketService.onHintError((error: { message: string }) => {
+            console.error(error.message);
+            setIsHintLoading(false);
+        });
+
+        socketService.onEmojiReceive((data: { emoji: string }) => {
+            setOpponentEmoji(data.emoji);
+            setTimeout(() => setOpponentEmoji(null), 2000);
+        });
+
+        socketService.onRoomCreated(({ roomId }) => {
+            console.log('Room created, navigating to:', roomId);
+            setIsRoomAdmin(true);
+            router.push(`/room/${roomId}`);
+        });
+
+        socketService.onRoomUpdated(({ players }) => {
+            console.log('Room updated with players:', players);
+            setRoomPlayers(players);
+        });
+
+        socketService.onRoomJoinFailed(({ error }) => {
+            console.error('Room join failed:', error);
+            toast({
+                variant: 'destructive',
+                title: 'Could Not Join Room',
+                description: error,
+            });
+            router.push('/');
+        });
+        
+        // No dependencies, so this runs once on mount.
+    }, [router, toast, actionQueue]);
+
+    const performWhenConnected = (action: () => void) => {
+        if (socketService.isConnected()) {
+            action();
+        } else {
+            setActionQueue(() => action);
+            // Re-trigger connection if not connected. This is a safeguard.
             const socketUrl = window.location.origin;
-            const socket = socketService.connect(name, socketUrl);
-
-            socket.on('connect', () => {
-                console.log('Socket.IO connected:', socket.id);
-                if (actionQueue) {
-                    actionQueue();
-                    setActionQueue(null); 
-                }
-            });
-
-            socketService.onMatchFound((newGameState: Omit<GameState, 'matchId'>) => {
-                console.log("Match found, updating state:", newGameState);
-                const fullGameState = { ...newGameState, matchId: (newGameState as any).id };
-                setGameState(fullGameState);
-                router.push(`/arena/${fullGameState.matchId}`);
-            });
-    
-            socketService.onMatchFoundForRoom((newGameState: GameState) => {
-                console.log("Room match found, updating state:", newGameState);
-                setGameState(newGameState);
-                setRoomPlayers([]);
-                router.push(`/arena/${newGameState.matchId}`);
-            });
-    
-            socketService.onStateUpdate((updatedGameState: GameState) => {
-                console.log("State updated:", updatedGameState);
-                setGameState(updatedGameState);
-            });
-    
-            socketService.onGameOver((gameOverState: { winner: string }) => {
-                console.log("Game over:", gameOverState);
-                setWinner(gameOverState.winner);
-            });
-    
-            socketService.onHintResult((hintResult: { hint: string }) => {
-                setHint(hintResult.hint);
-                setIsHintLoading(false);
-            });
-    
-            socketService.onHintError((error: { message: string }) => {
-                console.error(error.message);
-                setIsHintLoading(false);
-            });
-    
-            socketService.onEmojiReceive((data: { emoji: string }) => {
-                setOpponentEmoji(data.emoji);
-                setTimeout(() => setOpponentEmoji(null), 2000);
-            });
-    
-            socketService.onRoomCreated(({ roomId }) => {
-                console.log('Room created, navigating to:', roomId);
-                setIsRoomAdmin(true);
-                router.push(`/room/${roomId}`);
-            });
-    
-            socketService.onRoomUpdated(({ players }) => {
-                console.log('Room updated with players:', players);
-                setRoomPlayers(players);
-            });
-    
-            socketService.onRoomJoinFailed(({ error }) => {
-                console.error('Room join failed:', error);
-                toast({
-                    variant: 'destructive',
-                    title: 'Could Not Join Room',
-                    description: error,
-                });
-                router.push('/');
-            });
-
-            return socket;
-        };
-
-        if (playerName && typeof window !== 'undefined') {
-            setupSocket(playerName);
+            socketService.connect(socketUrl);
         }
+    };
 
-    }, [playerName, router, toast, actionQueue]);
-
+    const updatePlayerNameAndThen = (name: string, andThen: () => void) => {
+        setPlayerName(name);
+        performWhenConnected(() => {
+            socketService.emitUpdatePlayerName(name);
+            andThen();
+        });
+    }
 
     const connectAndJoin = (name: string) => {
-        setPlayerName(name);
-        setActionQueue(() => () => socketService.joinMatchmaking());
+        updatePlayerNameAndThen(name, () => {
+            socketService.joinMatchmaking();
+        });
     };
 
     const createRoom = (name: string) => {
-        setPlayerName(name);
-        setActionQueue(() => () => socketService.emitCreateRoom({ playerName: name }));
+        updatePlayerNameAndThen(name, () => {
+             socketService.emitCreateRoom();
+        });
     }
 
     const joinRoom = (name: string, roomId: string) => {
-        setPlayerName(name);
-        router.push(`/room/${roomId}`);
-        setActionQueue(() => () => socketService.emitJoinRoom(roomId));
+        updatePlayerNameAndThen(name, () => {
+            router.push(`/room/${roomId}`);
+            socketService.emitJoinRoom(roomId);
+        });
     }
 
     const startBattle = (roomId: string) => {

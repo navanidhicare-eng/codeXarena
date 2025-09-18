@@ -4,23 +4,14 @@ import { toast } from '@/hooks/use-toast';
 
 let socket: Socket;
 
-const connect = (name: string, url: string) => {
+const connect = (url: string) => {
   if (socket && socket.connected) {
-    if (socket.io.opts.query?.playerName !== name) {
-        socket.io.opts.query = { playerName: name };
-        socket.disconnect().connect();
-    }
     return socket;
   }
   
   socket = io(url, {
-    query: { playerName: name },
     transports: ['websocket'],
     autoConnect: true,
-  });
-
-  socket.on('connect', () => {
-    console.log('Socket.IO connected:', socket.id);
   });
 
   socket.on('disconnect', (reason) => {
@@ -38,6 +29,15 @@ const connect = (name: string, url: string) => {
 
   return socket;
 };
+
+const isConnected = () => {
+    return socket && socket.connected;
+}
+
+const emitUpdatePlayerName = (name: string) => {
+    if (!socket) return;
+    socket.emit('player:updateName', { playerName: name });
+}
 
 // Quick Match
 const joinMatchmaking = () => {
@@ -62,10 +62,9 @@ const emitSendEmoji = (emoji: string) => {
 }
 
 // Rooms
-const emitCreateRoom = (options: any) => {
+const emitCreateRoom = () => {
     if (!socket) return;
-    console.log("Emitting room:create", options);
-    socket.emit('room:create', options);
+    socket.emit('room:create');
 }
 
 const emitJoinRoom = (roomId: string) => {
@@ -134,7 +133,9 @@ const onRoomJoinFailed = (callback: (data: { error: string }) => void) => {
 
 const socketService = {
   connect,
+  isConnected,
   // Emitters
+  emitUpdatePlayerName,
   joinMatchmaking,
   emitRunCode,
   emitGetHint,
