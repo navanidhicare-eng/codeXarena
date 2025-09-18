@@ -16,33 +16,6 @@ type LandingHeroProps = {
   onJoinRoom: (playerName: string, roomId: string) => void;
 };
 
-const Typewriter = ({ text }: { text: string }) => {
-    const [displayedText, setDisplayedText] = useState('');
-    const [isDeleting, setIsDeleting] = useState(false);
-    const [loopNum, setLoopNum] = useState(0);
-    const [typingSpeed, setTypingSpeed] = useState(150);
-
-    useEffect(() => {
-        const handleTyping = () => {
-            setDisplayedText(text.substring(0, displayedText.length + 1));
-            if (displayedText === text) {
-                setTimeout(() => setIsDeleting(true), 2000);
-            }
-        };
-
-        const timer = setTimeout(handleTyping, typingSpeed);
-        return () => clearTimeout(timer);
-    }, [displayedText, text, typingSpeed]);
-
-    return (
-        <h1 className="font-headline font-bold text-3xl sm:text-4xl md:text-5xl text-foreground whitespace-nowrap">
-            {displayedText}
-            <span className="animate-pulse">|</span>
-        </h1>
-    )
-}
-
-
 export function LandingHero({ onEnterArena, onCreateRoom, onJoinRoom }: LandingHeroProps) {
   const [playerName, setPlayerName] = useState('');
   const [isJoinModalOpen, setJoinModalOpen] = useState(false);
@@ -50,17 +23,13 @@ export function LandingHero({ onEnterArena, onCreateRoom, onJoinRoom }: LandingH
   const [text, setText] = useState('');
   
   useEffect(() => {
-    let i = 0;
-    const typingInterval = setInterval(() => {
-      if (i < fullText.length) {
-        setText(prev => prev + fullText.charAt(i));
-        i++;
-      } else {
-        clearInterval(typingInterval);
-      }
-    }, 120);
-    return () => clearInterval(typingInterval);
-  }, [fullText]);
+    if (text.length < fullText.length) {
+      const timeout = setTimeout(() => {
+        setText(fullText.slice(0, text.length + 1));
+      }, 120);
+      return () => clearTimeout(timeout);
+    }
+  }, [text, fullText]);
 
 
   const handleJoin = (roomId: string) => {
