@@ -157,7 +157,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         });
         
         // No dependencies, so this runs once on mount.
-    }, [router, toast]); // actionQueue removed from dependencies
+    }, [router, toast, actionQueue]); 
 
     const performWhenConnected = (action: () => void) => {
         if (socketService.isConnected()) {
