@@ -1,9 +1,11 @@
+
 "use client";
 
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { Chatbot } from '@/components/Chatbot';
 import { AppContextProvider } from '@/context/AppContext';
+import { ClientOnly } from '@/components/ClientOnly';
 
 export default function RootLayout({
   children,
@@ -22,7 +24,9 @@ export default function RootLayout({
       <body className="font-body antialiased">
         <AppContextProvider>
             {children}
-            <Chatbot />
+            <ClientOnly>
+              <Chatbot />
+            </ClientOnly>
             <Toaster />
         </AppContextProvider>
       </body>
