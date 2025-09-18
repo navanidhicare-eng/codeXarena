@@ -85,15 +85,11 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
     const { toast } = useToast();
 
     useEffect(() => {
-        // This effect runs only once on the client to establish the socket connection.
         const socketUrl = window.location.origin;
         const socket = socketService.connect(socketUrl);
 
         socket.on('connect', () => {
             console.log('Socket.IO connected:', socket.id);
-            // Execute any pending actions
-            actionQueue.forEach(action => action());
-            setActionQueue([]);
         });
 
         socketService.onMatchFound((newGameState: Omit<GameState, 'matchId'>) => {
@@ -156,39 +152,41 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
             router.push('/');
         });
         
-        // No dependencies, so this runs once on mount.
+        socketService.onNameUpdated(() => {
+            actionQueue.forEach(action => action());
+            setActionQueue([]);
+        });
+
+        return () => {
+            socketService.disconnect();
+        };
     }, [router, toast, actionQueue]); 
 
-    const performWhenConnected = (action: () => void) => {
+    const performWhenConnected = (name: string, action: () => void) => {
+        setPlayerName(name);
+        setActionQueue(prev => [...prev, action]);
         if (socketService.isConnected()) {
-            action();
+            socketService.emitUpdatePlayerName(name);
         } else {
-            setActionQueue(prev => [...prev, action]);
+             // The on('connect') listener will handle updating the name
         }
     };
 
-    const updatePlayerNameAndThen = (name: string, andThen: () => void) => {
-        setPlayerName(name);
-        performWhenConnected(() => {
-            socketService.emitUpdatePlayerName(name);
-            andThen();
-        });
-    }
-
     const connectAndJoin = (name: string) => {
-        updatePlayerNameAndThen(name, () => {
+        performWhenConnected(name, () => {
             socketService.joinMatchmaking();
         });
+        router.push('/matchmaking');
     };
 
     const createRoom = (name: string) => {
-        updatePlayerNameAndThen(name, () => {
+        performWhenConnected(name, () => {
              socketService.emitCreateRoom();
         });
     }
 
     const joinRoom = (name: string, roomId: string) => {
-        updatePlayerNameAndThen(name, () => {
+        performWhenConnected(name, () => {
             socketService.emitJoinRoom(roomId);
         });
     }

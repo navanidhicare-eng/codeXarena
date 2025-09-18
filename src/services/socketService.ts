@@ -30,6 +30,12 @@ const connect = (url: string) => {
   return socket;
 };
 
+const disconnect = () => {
+    if (socket) {
+        socket.disconnect();
+    }
+};
+
 const isConnected = () => {
     return socket && socket.connected;
 }
@@ -79,6 +85,11 @@ const emitStartBattle = (roomId: string) => {
 
 
 // --- LISTENERS ---
+
+const onNameUpdated = (callback: () => void) => {
+    if (!socket) return;
+    socket.off('player:nameUpdated').on('player:nameUpdated', callback);
+};
 
 const onMatchFound = (callback: (data: any) => void) => {
   if (!socket) return;
@@ -133,6 +144,7 @@ const onRoomJoinFailed = (callback: (data: { error: string }) => void) => {
 
 const socketService = {
   connect,
+  disconnect,
   isConnected,
   // Emitters
   emitUpdatePlayerName,
@@ -144,6 +156,7 @@ const socketService = {
   emitJoinRoom,
   emitStartBattle,
   // Listeners
+  onNameUpdated,
   onMatchFound,
   onMatchFoundForRoom,
   onStateUpdate,
