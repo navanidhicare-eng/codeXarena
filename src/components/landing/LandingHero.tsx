@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Swords, Users, LogIn, Bug, Shield } from 'lucide-react';
+import { Swords, Users, LogIn, Bug, Shield, Calendar } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -34,6 +34,9 @@ export function LandingHero({ onEnterArena, onCreateRoom, onJoinRoom }: LandingH
                   CodeXarena
               </Link>
               <nav className="flex gap-6 items-center">
+                  <Button asChild variant="link" className="text-foreground font-bold hover:text-primary transition-colors">
+                      <Link href="/events">Events</Link>
+                  </Button>
                   <Button asChild variant="link" className="text-foreground font-bold hover:text-primary transition-colors">
                       <Link href="/clans">Clans</Link>
                   </Button>
