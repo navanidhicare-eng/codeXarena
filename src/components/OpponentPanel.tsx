@@ -25,8 +25,7 @@ export function OpponentPanel({ playerData, problem }: OpponentPanelProps) {
         <h2 className="text-2xl font-bold font-headline text-secondary">{problem.title}</h2>
       </div>
 
-      <ScrollArea className="flex-grow">
-          <div className="space-y-4 pr-4">
+      <div className="flex-grow space-y-4 pr-4 overflow-y-auto">
             <Card className="bg-background/50 border-secondary/20">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-secondary/90">
@@ -66,8 +65,7 @@ export function OpponentPanel({ playerData, problem }: OpponentPanelProps) {
                 </CardContent>
                 </Card>
             )}
-          </div>
-      </ScrollArea>
+      </div>
       
       <div className="flex-shrink-0 rounded-lg p-4 bg-background/50 border border-secondary/20">
          <div className="flex items-center gap-2 mb-4">

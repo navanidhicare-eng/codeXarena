@@ -75,7 +75,7 @@ export default function ArenaView() {
   };
 
   const handleGetHint = () => {
-    emitGetHint();
+    emitGetHint(playerCode);
   };
 
   const handleSendEmoji = (emoji: string) => {

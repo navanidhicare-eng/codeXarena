@@ -45,7 +45,7 @@ interface AppContextType {
     createRoom: (playerName: string) => void;
     joinRoom: (playerName: string, roomId: string) => void;
     emitRunCode: (code: string) => void;
-    emitGetHint: () => void;
+    emitGetHint: (code: string) => void;
     clearHint: () => void;
     sendEmoji: (emoji: string) => void;
     startBattle: (roomId: string) => void;
@@ -189,9 +189,9 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         mockSocketService.emitRunCode(code);
     };
 
-    const emitGetHint = () => {
+    const emitGetHint = (code: string) => {
         setIsHintLoading(true);
-        mockSocketService.emitGetHint();
+        mockSocketService.emitGetHint(code);
     };
     
     const clearHint = () => {

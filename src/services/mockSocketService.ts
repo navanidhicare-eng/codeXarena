@@ -1,5 +1,6 @@
 
 
+import { getAiHint } from '@/ai/flows/ai-hint-system';
 
 
 type Language = "javascript" | "python" | "java" | "cpp";
@@ -11,6 +12,7 @@ type StarterCode = {
 type Problem = {
     title: string;
     description: string;
+    starterCode: StarterCode;
     solutionChecker: (code: string, lang: Language) => { name: string; passed: boolean }[];
 };
 
@@ -358,11 +360,23 @@ const emitRunCode = (code: string) => {
     }
 };
 
-const emitGetHint = () => {
-    console.log('Hint requested. Simulating delay...');
-    setTimeout(() => {
-        onHintResultCallback?.({ hint: 'This is a mock hint. Have you considered the edge cases?' });
-    }, 1500);
+const emitGetHint = async (code: string) => {
+    console.log('Hint requested with code. Calling Genkit flow...');
+    if (!activeGameState) {
+        onHintErrorCallback?.({ message: 'Game not started.' });
+        return;
+    }
+    try {
+        const result = await getAiHint({
+            problemTitle: activeGameState.problem.title,
+            problemDescription: activeGameState.problem.description,
+            code: code,
+        });
+        onHintResultCallback?.({ hint: result.text });
+    } catch (error) {
+        console.error('AI Hint Error:', error);
+        onHintErrorCallback?.({ message: 'Could not generate hint.' });
+    }
 };
 
 const emitSendEmoji = (emoji: string) => {
