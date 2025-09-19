@@ -3,6 +3,7 @@
 
 
 
+
 import { getAiHint } from '@/ai/flows/ai-hint-system';
 
 
@@ -25,7 +26,7 @@ type GameState = {
     players: {
         name: string;
         score: number;
-        testCases: { name: string; passed: boolean | null }[];
+        testCases: { name:string; passed: boolean | null }[];
     }[];
     problem: {
         title: string;
@@ -65,15 +66,15 @@ nums = [2, 7, 11, 15], target = 9
             cpp: `class Solution {\npublic:\n  vector<int> twoSum(vector<int>& nums, int target) {\n    // Write your code here\n  }\n};`
         },
         solutionChecker: (code, lang) => {
-            const usesMap = code.includes('Map') || code.includes('dict') || code.includes('unordered_map') || (code.includes('{') && code.includes('}'));
+            const usesMap = code.includes('new Map()') || code.includes('dict()') || code.includes('unordered_map');
             const usesLoop = code.includes('for') || code.includes('while');
             const returnsArray = code.includes('return [') || code.includes('return {');
 
             return [
                 { name: 'Test with positive numbers', passed: usesMap && usesLoop && returnsArray },
                 { name: 'Test with negative numbers', passed: usesMap && usesLoop && returnsArray },
-                { name: 'Test with zero', passed: usesMap && usesLoop },
-                { name: 'Test with large numbers', passed: usesMap && usesLoop },
+                { name: 'Test with zero', passed: usesMap && usesLoop && returnsArray },
+                { name: 'Test with large numbers', passed: usesMap && usesLoop && returnsArray },
             ];
         }
     },
@@ -145,7 +146,7 @@ s = ["h","e","l","l","o"]
                 { name: 'Test with even length string', passed: usesLoop && usesPointers && usesSwap },
                 { name: 'Test with odd length string', passed: usesLoop && usesPointers && usesSwap },
                 { name: 'Test with empty string', passed: true }, // An empty string is its own reverse.
-                { name: 'Test with palindrome', passed: usesLoop },
+                { name: 'Test with palindrome', passed: usesLoop && usesPointers },
             ];
         }
     },
@@ -192,6 +193,27 @@ false
                 { name: 'Test with non-palindrome', passed: convertsToString && reverses && compares },
                 { name: 'Test with single digit', passed: true }, // Single digits are always palindromes
                 { name: 'Test with negative number', passed: handlesNegative },
+            ];
+        }
+    },
+     {
+        title: 'Valid Parentheses',
+        description: 'Given a string s containing just the characters \'(\', \')\', \'{\', \'}\', \'[\' and \']\', determine if the input string is valid. An input string is valid if: Open brackets must be closed by the same type of brackets. Open brackets must be closed in the correct order. Every close bracket has a corresponding open bracket of the same type.',
+        starterCode: {
+            javascript: `function isValid(s) {\n  // Write your code here\n};`,
+            python: `def is_valid(s):\n  # Write your code here\n  pass`,
+            java: `class Solution {\n    public boolean isValid(String s) {\n    // Write your code here\n  }\n}`,
+            cpp: `class Solution {\npublic:\n    bool isValid(string s) {\n    // Write your code here\n  }\n};`
+        },
+        solutionChecker: (code, lang) => {
+            const usesStack = code.includes('stack') || code.includes('push') && code.includes('pop');
+            const usesMap = code.includes('Map') || code.includes('dict') || (code.includes('{') && code.includes('}'));
+            return [
+                { name: 'Test with simple valid string "()"', passed: usesStack && usesMap },
+                { name: 'Test with complex valid string "()[]{}"', passed: usesStack && usesMap },
+                { name: 'Test with invalid string "(]"', passed: usesStack && usesMap },
+                { name: 'Test with invalid string "([)]"', passed: usesStack && usesMap },
+                { name: 'Test with only open brackets', passed: usesStack && usesMap && code.includes('stack.length === 0') || code.includes('stack.empty()') },
             ];
         }
     }
@@ -448,4 +470,5 @@ const mockSocketService = {
 };
 
 export default mockSocketService;
+
 
