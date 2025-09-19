@@ -2,6 +2,7 @@
 
 
 
+
 import { getAiHint } from '@/ai/flows/ai-hint-system';
 
 
@@ -64,12 +65,15 @@ nums = [2, 7, 11, 15], target = 9
             cpp: `class Solution {\npublic:\n  vector<int> twoSum(vector<int>& nums, int target) {\n    // Write your code here\n  }\n};`
         },
         solutionChecker: (code, lang) => {
-            const passes = code.includes('Map') || code.includes('{');
+            const usesMap = code.includes('Map') || code.includes('dict') || code.includes('unordered_map') || (code.includes('{') && code.includes('}'));
+            const usesLoop = code.includes('for') || code.includes('while');
+            const returnsArray = code.includes('return [') || code.includes('return {');
+
             return [
-                { name: 'Test with positive numbers', passed: passes },
-                { name: 'Test with negative numbers', passed: passes },
-                { name: 'Test with zero', passed: passes },
-                { name: 'Test with large numbers', passed: code.includes('Map') },
+                { name: 'Test with positive numbers', passed: usesMap && usesLoop && returnsArray },
+                { name: 'Test with negative numbers', passed: usesMap && usesLoop && returnsArray },
+                { name: 'Test with zero', passed: usesMap && usesLoop },
+                { name: 'Test with large numbers', passed: usesMap && usesLoop },
             ];
         }
     },
@@ -98,11 +102,15 @@ n = 15
             const hasFizz = code.includes('Fizz');
             const hasBuzz = code.includes('Buzz');
             const hasLoop = code.includes('for') || code.includes('while');
+            const hasMod3 = code.includes('% 3');
+            const hasMod5 = code.includes('% 5');
+            const hasMod15 = code.includes('% 15');
+
             return [
-                { name: 'Prints Fizz for multiples of 3', passed: hasFizz && hasLoop },
-                { name: 'Prints Buzz for multiples of 5', passed: hasBuzz && hasLoop },
-                { name: 'Prints FizzBuzz for multiples of 15', passed: hasFizz && hasBuzz && hasLoop },
-                { name: 'Handles numbers not divisible by 3 or 5', passed: hasLoop },
+                { name: 'Prints Fizz for multiples of 3', passed: hasFizz && hasLoop && hasMod3 },
+                { name: 'Prints Buzz for multiples of 5', passed: hasBuzz && hasLoop && hasMod5 },
+                { name: 'Prints FizzBuzz for multiples of 15', passed: hasFizz && hasBuzz && hasLoop && (hasMod15 || (hasMod3 && hasMod5)) },
+                { name: 'Handles numbers not divisible by 3 or 5', passed: hasLoop && code.includes('else') },
             ];
         }
     },
@@ -129,12 +137,15 @@ s = ["h","e","l","l","o"]
             cpp: `class Solution {\npublic:\n  void reverseString(vector<char>& s) {\n    // Write your code here\n  }\n};`
         },
          solutionChecker: (code, lang) => {
-            const passes = code.includes('reverse') || code.includes('swap') || (code.includes('[') && code.includes(']'));
+            const usesLoop = code.includes('for') || code.includes('while');
+            const usesPointers = code.includes('left') && code.includes('right');
+            const usesSwap = code.includes('temp') || code.includes('swap') || (code.match(/s\[.*?\].*?=.*s\[/g) || []).length > 1;
+
             return [
-                { name: 'Test with even length string', passed: passes },
-                { name: 'Test with odd length string', passed: passes },
-                { name: 'Test with empty string', passed: true },
-                { name: 'Test with palindrome', passed: passes },
+                { name: 'Test with even length string', passed: usesLoop && usesPointers && usesSwap },
+                { name: 'Test with odd length string', passed: usesLoop && usesPointers && usesSwap },
+                { name: 'Test with empty string', passed: true }, // An empty string is its own reverse.
+                { name: 'Test with palindrome', passed: usesLoop },
             ];
         }
     },
@@ -171,12 +182,16 @@ false
             cpp: `class Solution {\npublic:\n  bool isPalindrome(int x) {\n    // Write your code here\n  }\n};`
         },
          solutionChecker: (code, lang) => {
-            const passes = code.includes('reverse') || code.toString().includes('x');
+            const handlesNegative = code.includes('x < 0');
+            const convertsToString = code.includes('toString') || code.includes('str(');
+            const reverses = code.includes('.reverse()') || code.includes('[::-1]');
+            const compares = code.includes('===') || code.includes('==');
+            
             return [
-                { name: 'Test with positive palindrome', passed: passes },
-                { name: 'Test with non-palindrome', passed: passes },
-                { name: 'Test with single digit', passed: true },
-                { name: 'Test with negative number', passed: passes },
+                { name: 'Test with positive palindrome', passed: convertsToString && reverses && compares },
+                { name: 'Test with non-palindrome', passed: convertsToString && reverses && compares },
+                { name: 'Test with single digit', passed: true }, // Single digits are always palindromes
+                { name: 'Test with negative number', passed: handlesNegative },
             ];
         }
     }
@@ -433,3 +448,4 @@ const mockSocketService = {
 };
 
 export default mockSocketService;
+
