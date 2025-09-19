@@ -7,7 +7,7 @@ import axios from "axios";
 import * as cors from "cors";
 
 // IMPORTANT: Replace this with your deployed website's URL for production security.
-const allowedOrigins = ["https://code-x-arena.onrender.com", "http://localhost:3000"];
+const allowedOrigins = ["https://code-x-arena.onrender.com", "http://localhost:3000", "https://6000-firebase-studio-....cloudworkstations.dev"];
 
 const corsMiddleware = cors({
   origin: (origin, callback) => {
