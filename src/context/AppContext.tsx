@@ -32,6 +32,12 @@ type GameState = {
     status: 'waiting' | 'in-progress' | 'finished';
 };
 
+type CodeOutput = {
+    stdout: string | null;
+    stderr: string | null;
+    error: string | null;
+}
+
 interface AppContextType {
     playerName: string;
     gameState: GameState | null;
@@ -41,6 +47,7 @@ interface AppContextType {
     opponentEmoji: string | null;
     roomPlayers: string[];
     isRoomAdmin: boolean;
+    codeOutput: CodeOutput;
     connectAndJoin: (name: string) => void;
     createRoom: (playerName: string) => void;
     joinRoom: (playerName: string, roomId: string) => void;
@@ -52,6 +59,8 @@ interface AppContextType {
     leaveGame: () => void;
 }
 
+const initialCodeOutput = { stdout: null, stderr: null, error: null };
+
 export const AppContext = createContext<AppContextType>({
     playerName: '',
     gameState: null,
@@ -61,6 +70,7 @@ export const AppContext = createContext<AppContextType>({
     opponentEmoji: null,
     roomPlayers: [],
     isRoomAdmin: false,
+    codeOutput: initialCodeOutput,
     connectAndJoin: () => {},
     createRoom: () => {},
     joinRoom: () => {},
@@ -81,6 +91,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
     const [opponentEmoji, setOpponentEmoji] = useState<string | null>(null);
     const [roomPlayers, setRoomPlayers] = useState<string[]>([]);
     const [isRoomAdmin, setIsRoomAdmin] = useState(false);
+    const [codeOutput, setCodeOutput] = useState<CodeOutput>(initialCodeOutput);
 
     const router = useRouter();
     const { toast } = useToast();
@@ -175,7 +186,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
 
     const joinRoom = (name: string, roomId: string) => {
         performAction(name, () => {
-            mockSocket_service.emitJoinRoom(name, roomId);
+            mockSocketService.emitJoinRoom(name, roomId);
             router.push(`/room/${roomId}`);
         });
     }
@@ -186,13 +197,20 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
     
     const emitRunCode = async (code: string, lang: Language) => {
         if (!playerName || !gameState) return;
+        
+        setCodeOutput(initialCodeOutput);
 
         const url = process.env.NEXT_PUBLIC_CODE_EXECUTION_URL;
         if (!url) {
+            // Fallback to mock service if URL is not configured
+             mockSocketService.emitRunCode(playerName, code);
+             const mockOutput = `Mock execution for ${lang}:\nCode: ${code.substring(0, 50)}...`;
+             setCodeOutput({stdout: mockOutput, stderr: null, error: null});
+
             toast({
                 variant: 'destructive',
                 title: 'Configuration Error',
-                description: 'The code execution URL is not configured.',
+                description: 'The code execution URL is not configured. Using mock service.',
             });
             return;
         }
@@ -211,6 +229,12 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
 
             const result = await response.json();
             
+            setCodeOutput({
+                stdout: result.run.stdout || null,
+                stderr: result.run.stderr || null,
+                error: null
+            });
+            
             // This is a mock update based on the piston response.
             // In a real app, the backend would manage state and broadcast it.
             setGameState(prevState => {
@@ -222,12 +246,13 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
                 let score = 0;
                 
                 const newTestCases = userPlayer.testCases.map(tc => {
+                    // Simulate test cases based on output for now
                     const passed = Math.random() > 0.3; // Simulate some tests passing
                     if (passed) score++;
                     return {...tc, passed};
                 });
                 
-                // If stdout is clean, let's assume all tests passed
+                // If stdout is clean and there's no error code, let's assume all tests passed
                  if (result.run.code === 0 && !result.run.stderr) {
                      score = userPlayer.testCases.length;
                      newTestCases.forEach(tc => tc.passed = true);
@@ -247,10 +272,12 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
 
         } catch (error: any) {
             console.error("Error running code:", error);
+            const errorMessage = error.message || 'An unknown error occurred.';
+             setCodeOutput({ stdout: null, stderr: null, error: errorMessage });
             toast({
                 variant: 'destructive',
                 title: 'Code Execution Failed',
-                description: error.message || 'An unknown error occurred.',
+                description: errorMessage,
             });
         }
     };
@@ -273,6 +300,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         setWinner(null);
         setRoomPlayers([]);
         setIsRoomAdmin(false);
+        setCodeOutput(initialCodeOutput);
         router.push('/');
     };
 
@@ -286,6 +314,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
             opponentEmoji,
             roomPlayers,
             isRoomAdmin,
+            codeOutput,
             connectAndJoin,
             createRoom,
             joinRoom,

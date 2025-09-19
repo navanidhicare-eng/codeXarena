@@ -38,6 +38,7 @@ export default function ArenaView() {
     opponentEmoji,
     sendEmoji,
     leaveGame,
+    codeOutput,
   } = useContext(AppContext);
 
   const [playerCode, setPlayerCode] = useState("");
@@ -187,6 +188,7 @@ export default function ArenaView() {
                     playerData={{
                       code: playerCode,
                       testCases: self.testCases.map(tc => tc.passed),
+                      output: codeOutput,
                     }}
                     selectedLanguage={selectedLanguage}
                     onCodeChange={handleCodeChange}
