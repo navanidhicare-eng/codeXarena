@@ -34,6 +34,7 @@ export function FinalCTA({ onEnterArena }: FinalCTAProps) {
                     onKeyDown={(e) => {
                         if (e.key === 'Enter') onEnterArena(playerName)
                     }}
+                    suppressHydrationWarning
                 />
                 <Button
                     size="lg"
