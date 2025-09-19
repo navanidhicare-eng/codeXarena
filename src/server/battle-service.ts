@@ -1,104 +1,73 @@
-/**
- * @fileOverview Service for managing active battle state in CodeXarena.
- */
-import type { Socket } from 'socket.io';
-import type { GameState, Problem } from './types';
-import { problems } from './game-state';
-
-// In-memory store for active battles
-const activeBattles: { [matchId: string]: { gameState: GameState, sockets: Socket[], problem: Problem } } = {};
-
-
-class BattleService {
-    /**
-     * Adds a new battle to the active battles store.
-     * @param matchId The ID of the match.
-     * @param gameState The initial state of the game.
-     * @param sockets The sockets of the players in the battle.
-     */
-    addBattle(matchId: string, gameState: GameState, sockets: Socket[]) {
-        const problem = problems.find(p => p.title === gameState.problem.title);
-        if (!problem) throw new Error(`Problem "${gameState.problem.title}" not found!`);
-
-        activeBattles[matchId] = { gameState, sockets, problem };
-
-        sockets.forEach(socket => {
-            socket.join(matchId);
-            // Store matchId on socket for easy lookup
-            (socket as any).matchId = matchId;
-        });
-    }
-    
-    /**
-     * Handles a player's request to run their code.
-     * @param socket The player's socket.
-     * @param code The code to run.
-     */
-    handleRunCode(socket: Socket, code: string) {
-        const matchId = (socket as any).matchId;
-        const battle = activeBattles[matchId];
-        if (!battle) return;
-
-        const playerState = battle.gameState.players.find(p => p.name === (socket as any).playerName);
-        if (!playerState) return;
-        
-        // In a real app, this would use a secure code execution sandbox
-        const results = battle.problem.solutionChecker(code, 'javascript'); // Mock language
-        let score = 0;
-        results.forEach((res, index) => {
-            if (playerState.testCases[index]) {
-                playerState.testCases[index].passed = res.passed;
-                if(res.passed) score++;
-            }
-        });
-        playerState.score = score;
-        
-        // Check for winner
-        if (playerState.score === playerState.testCases.length) {
-            battle.gameState.status = 'finished';
-            const winner = playerState.name;
-            socket.server.to(matchId).emit('battle:gameOver', { winner });
-            delete activeBattles[matchId];
-            return;
-        }
-
-        socket.server.to(matchId).emit('battle:stateUpdate', battle.gameState);
-    }
-    
-    /**
-     * Handles a player's request for an AI hint.
-     * @param socket The player's socket.
-     * @param getAiHint The Genkit flow to get the hint.
-     */
-    async handleGetHint(socket: Socket, getAiHint: Function) {
-        const matchId = (socket as any).matchId;
-        const battle = activeBattles[matchId];
-        if (!battle) return;
-
-        try {
-            const result = await getAiHint({
-                problemTitle: battle.gameState.problem.title,
-                problemDescription: battle.gameState.problem.description,
-                code: '', // In a real app, you'd pass the player's current code
-            });
-            socket.emit('battle:hintResult', { hint: result.text });
-        } catch (error) {
-            console.error('AI Hint Error:', error);
-            socket.emit('battle:hintError', { message: 'Could not generate hint.' });
-        }
-    }
-    
-    /**
-     * Relays an emoji from one player to their opponent.
-     * @param socket The sender's socket.
-     * @param emoji The emoji to send.
-     */
-    handleSendEmoji(socket: Socket, emoji: string) {
-        const matchId = (socket as any).matchId;
-        if (matchId) {
-            socket.to(matchId).emit('battle:emojiReceive', { emoji });
-        }
-    }
+{
+  "name": "nextn",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "genkit:dev": "genkit start -- tsx src/ai/dev.ts",
+    "genkit:watch": "genkit start -- tsx --watch src/ai/dev.ts",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@genkit-ai/googleai": "^1.14.1",
+    "@genkit-ai/next": "^1.14.1",
+    "@hookform/resolvers": "^4.1.3",
+    "@radix-ui/react-accordion": "^1.2.3",
+    "@radix-ui/react-alert-dialog": "^1.1.6",
+    "@radix-ui/react-avatar": "^1.1.3",
+    "@radix-ui/react-checkbox": "^1.1.4",
+    "@radix-ui/react-collapsible": "^1.1.11",
+    "@radix-ui/react-dialog": "^1.1.6",
+    "@radix-ui/react-dropdown-menu": "^2.1.6",
+    "@radix-ui/react-label": "^2.1.2",
+    "@radix-ui/react-menubar": "^1.1.6",
+    "@radix-ui/react-popover": "^1.1.6",
+    "@radix-ui/react-progress": "^1.1.2",
+    "@radix-ui/react-radio-group": "^1.2.3",
+    "@radix-ui/react-scroll-area": "^1.2.3",
+    "@radix-ui/react-select": "^2.1.6",
+    "@radix-ui/react-separator": "^1.1.2",
+    "@radix-ui/react-slider": "^1.2.3",
+    "@radix-ui/react-slot": "^1.2.3",
+    "@radix-ui/react-switch": "^1.1.3",
+    "@radix-ui/react-tabs": "^1.1.3",
+    "@radix-ui/react-toast": "^1.2.6",
+    "@radix-ui/react-tooltip": "^1.1.8",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "date-fns": "^3.6.0",
+    "dotenv": "^16.5.0",
+    "embla-carousel-react": "^8.6.0",
+    "firebase": "^11.9.1",
+    "framer-motion": "^11.5.7",
+    "genkit": "^1.14.1",
+    "jsqr": "^1.4.0",
+    "lucide-react": "^0.475.0",
+    "next": "15.3.3",
+    "ngrok": "^5.0.0-beta.2",
+    "patch-package": "^8.0.0",
+    "react": "^18.3.1",
+    "react-day-picker": "^8.10.1",
+    "react-dom": "^18.3.1",
+    "react-hook-form": "^7.54.2",
+    "react-resizable-panels": "^2.0.21",
+    "react-wrap-balancer": "^1.1.1",
+    "recharts": "^2.15.1",
+    "socket.io-client": "^4.7.5",
+    "tailwind-merge": "^3.0.1",
+    "tailwindcss-animate": "^1.0.7",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "genkit-cli": "^1.14.1",
+    "postcss": "^8",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5"
+  }
 }
-
-export const battleService = new BattleService();

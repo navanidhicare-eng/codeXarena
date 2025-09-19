@@ -79,7 +79,6 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
     const [opponentEmoji, setOpponentEmoji] = useState<string | null>(null);
     const [roomPlayers, setRoomPlayers] = useState<string[]>([]);
     const [isRoomAdmin, setIsRoomAdmin] = useState(false);
-    const [isConnected, setIsConnected] = useState(false);
 
     const router = useRouter();
     const { toast } = useToast();
@@ -88,6 +87,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         mockSocketService.onMatchFound((newGameState: GameState) => {
             console.log("Match found, updating state:", newGameState);
             setGameState(newGameState);
+            router.push(`/arena/${newGameState.matchId}`);
         });
         
         mockSocketService.onMatchFoundForRoom((newGameState: GameState) => {
@@ -159,7 +159,6 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
     const connectAndJoin = (name: string) => {
         performAction(name, () => {
             mockSocketService.joinMatchmaking();
-            router.push('/matchmaking');
         });
     };
 
@@ -172,6 +171,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
     const joinRoom = (name: string, roomId: string) => {
         performAction(name, () => {
             mockSocketService.emitJoinRoom(roomId);
+            router.push(`/room/${roomId}`);
         });
     }
 

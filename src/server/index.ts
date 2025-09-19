@@ -1,61 +1,73 @@
-/**
- * @fileOverview Main socket server for CodeXarena.
- * This file initializes the socket.io server and handles all real-time communication
- * for matchmaking, room management, and battles.
- */
-import { Server } from 'socket.io';
-import type { Socket } from 'socket.io';
-import { matchmakingService } from './matchmaking-service';
-import { roomService } from './room-service';
-import { battleService } from './battle-service';
-import { getAiHint } from '@/ai/flows/ai-hint-system';
-
-// In-memory store for player data
-const players: { [socketId: string]: { name: string; roomId?: string; matchId?: string } } = {};
-
-export function attachSocketServer(server: any) {
-  const io = new Server(server, {
-    cors: {
-      origin: "*", // Allow connections from any origin
-      methods: ["GET", "POST"]
-    }
-  });
-  console.log('Socket.IO server attached and running with CORS enabled.');
-
-  io.on('connection', (socket: Socket) => {
-    console.log('A user connected:', socket.id);
-    players[socket.id] = { name: 'Anonymous' };
-
-    // --- Player updates ---
-    socket.on('player:updateName', ({ playerName }) => {
-      console.log(`Player ${socket.id} updated name to ${playerName}`);
-      players[socket.id].name = playerName;
-      socket.emit('player:nameUpdated');
-    });
-
-    // --- Matchmaking ---
-    socket.on('matchmaking:join', () => {
-        matchmakingService.addPlayer(socket, players[socket.id].name);
-    });
-
-    // --- Room-based battles ---
-    socket.on('room:create', () => roomService.createRoom(socket, players[socket.id].name));
-    socket.on('room:join', ({ roomId }) => roomService.joinRoom(socket, roomId, players[socket.id].name));
-    socket.on('room:start_battle', ({ roomId }) => roomService.startBattle(io, roomId));
-
-    // --- In-battle actions ---
-    socket.on('battle:runCode', ({ code }) => battleService.handleRunCode(socket, code));
-    socket.on('battle:getHint', () => battleService.handleGetHint(socket, getAiHint));
-    socket.on('battle:sendEmoji', ({ emoji }) => battleService.handleSendEmoji(socket, emoji));
-
-    // --- Disconnection ---
-    socket.on('disconnect', () => {
-      console.log('User disconnected:', socket.id);
-      matchmakingService.removePlayer(socket); // Remove from queue if they are in it
-      // Note: Handling disconnection from a room or battle would be needed for a full implementation
-      delete players[socket.id];
-    });
-  });
-
-  return io;
+{
+  "name": "nextn",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "genkit:dev": "genkit start -- tsx src/ai/dev.ts",
+    "genkit:watch": "genkit start -- tsx --watch src/ai/dev.ts",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@genkit-ai/googleai": "^1.14.1",
+    "@genkit-ai/next": "^1.14.1",
+    "@hookform/resolvers": "^4.1.3",
+    "@radix-ui/react-accordion": "^1.2.3",
+    "@radix-ui/react-alert-dialog": "^1.1.6",
+    "@radix-ui/react-avatar": "^1.1.3",
+    "@radix-ui/react-checkbox": "^1.1.4",
+    "@radix-ui/react-collapsible": "^1.1.11",
+    "@radix-ui/react-dialog": "^1.1.6",
+    "@radix-ui/react-dropdown-menu": "^2.1.6",
+    "@radix-ui/react-label": "^2.1.2",
+    "@radix-ui/react-menubar": "^1.1.6",
+    "@radix-ui/react-popover": "^1.1.6",
+    "@radix-ui/react-progress": "^1.1.2",
+    "@radix-ui/react-radio-group": "^1.2.3",
+    "@radix-ui/react-scroll-area": "^1.2.3",
+    "@radix-ui/react-select": "^2.1.6",
+    "@radix-ui/react-separator": "^1.1.2",
+    "@radix-ui/react-slider": "^1.2.3",
+    "@radix-ui/react-slot": "^1.2.3",
+    "@radix-ui/react-switch": "^1.1.3",
+    "@radix-ui/react-tabs": "^1.1.3",
+    "@radix-ui/react-toast": "^1.2.6",
+    "@radix-ui/react-tooltip": "^1.1.8",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "date-fns": "^3.6.0",
+    "dotenv": "^16.5.0",
+    "embla-carousel-react": "^8.6.0",
+    "firebase": "^11.9.1",
+    "framer-motion": "^11.5.7",
+    "genkit": "^1.14.1",
+    "jsqr": "^1.4.0",
+    "lucide-react": "^0.475.0",
+    "next": "15.3.3",
+    "ngrok": "^5.0.0-beta.2",
+    "patch-package": "^8.0.0",
+    "react": "^18.3.1",
+    "react-day-picker": "^8.10.1",
+    "react-dom": "^18.3.1",
+    "react-hook-form": "^7.54.2",
+    "react-resizable-panels": "^2.0.21",
+    "react-wrap-balancer": "^1.1.1",
+    "recharts": "^2.15.1",
+    "socket.io-client": "^4.7.5",
+    "tailwind-merge": "^3.0.1",
+    "tailwindcss-animate": "^1.0.7",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "genkit-cli": "^1.14.1",
+    "postcss": "^8",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5"
+  }
 }
