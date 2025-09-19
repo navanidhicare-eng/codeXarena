@@ -67,7 +67,7 @@ export function LandingHero({ onEnterArena, onCreateRoom, onJoinRoom }: LandingH
           {/* Background Video/Image */}
           <div className="absolute inset-0 w-full h-full bg-black z-0">
               <Image
-                  src="https://picsum.photos/seed/arena-battle/1920/1080"
+                  src="https://i.ibb.co/pvfNdW0x/Whats-App-Image-2025-09-19-at-20-29-32-0fa2640d.jpg"
                   alt="CodeXarena battle"
                   fill
                   sizes="100vw"
