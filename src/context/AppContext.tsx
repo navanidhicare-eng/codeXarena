@@ -213,7 +213,8 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
     
     const emitRunCode = async (code: string, lang: Language, problemTitle: string) => {
         if (!playerName || !gameState) return;
-        
+
+        // Reset previous output
         setCodeOutput(initialCodeOutput);
 
         const url = process.env.NEXT_PUBLIC_CODE_EXECUTION_URL;
@@ -223,7 +224,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
                 title: 'Configuration Error',
                 description: 'The code execution URL is not configured.',
             });
-            setCodeOutput({ ...initialCodeOutput, error: "Code execution service is not configured." });
+            setCodeOutput({ ...initialCodeOutput, finalResult: 'Error', error: "Code execution service is not configured." });
             return;
         }
 
@@ -241,8 +242,10 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
 
             const result: CodeExecutionResult = await response.json();
             
+            // Set the entire battle report
             setCodeOutput(result);
             
+            // Update game state for scoreboard based on the results
             if (result && result.testCaseResults) {
                 setGameState(prevState => {
                     if (!prevState) return null;
@@ -258,7 +261,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
                         }
                         return p;
                     });
-
+                    
                     const userPlayer = newPlayers.find(p => p.name === playerName);
                     if (result.finalResult === 'Accepted' && userPlayer) {
                         setWinner(userPlayer.name);
@@ -327,5 +330,3 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         </AppContext.Provider>
     );
 };
-
-    
