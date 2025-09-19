@@ -43,14 +43,6 @@ const nextConfig: NextConfig = {
       }
     ],
   },
-  async rewrites() {
-    return [
-      {
-        source: '/join/:roomId',
-        destination: '/?join_room=:roomId',
-      },
-    ]
-  },
 };
 
 export default nextConfig;
