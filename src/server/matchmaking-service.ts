@@ -65,6 +65,7 @@ class MatchmakingService {
 
         // Notify both players that a match has been found
         const matchData = { ...gameState };
+        
         player1.socket.emit('matchmaking:success', matchData);
         player2.socket.emit('matchmaking:success', matchData);
         
