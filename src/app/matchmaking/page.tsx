@@ -1,10 +1,13 @@
+
 "use client";
 
 import { useContext, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { AppContext } from "@/context/AppContext";
 import { motion } from "framer-motion";
-import { Loader2, Swords } from "lucide-react";
+import { Loader2, Swords, ArrowLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 export default function MatchmakingPage() {
   const { playerName, gameState } = useContext(AppContext);
@@ -24,6 +27,15 @@ export default function MatchmakingPage() {
 
   return (
     <div className="h-screen w-screen flex flex-col items-center justify-center bg-background text-foreground p-4 overflow-hidden">
+      <div className="absolute top-6 left-6 z-10">
+        <Button asChild variant="outline" className="border-secondary/50 hover:bg-secondary/10 hover:text-secondary">
+          <Link href="/">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Home
+          </Link>
+        </Button>
+      </div>
+
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
