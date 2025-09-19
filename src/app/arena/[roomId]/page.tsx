@@ -71,12 +71,10 @@ export default function ArenaView() {
     setSelectedLanguage(language);
   }
 
-  const handleRunCode = () => {
+  const handleRunCode = async () => {
     setIsCodeRunning(true);
-    emitRunCode(playerCode);
-    setTimeout(() => {
-      setIsCodeRunning(false);
-    }, 1500);
+    await emitRunCode(playerCode, selectedLanguage);
+    setIsCodeRunning(false);
   };
 
   const handleGetHint = () => {

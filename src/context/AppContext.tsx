@@ -44,7 +44,7 @@ interface AppContextType {
     connectAndJoin: (name: string) => void;
     createRoom: (playerName: string) => void;
     joinRoom: (playerName: string, roomId: string) => void;
-    emitRunCode: (code: string) => void;
+    emitRunCode: (code: string, lang: Language) => void;
     emitGetHint: (code: string) => void;
     clearHint: () => void;
     sendEmoji: (emoji: string) => void;
@@ -130,7 +130,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         });
 
         mockSocketService.onRoomCreated(({ roomId, players }) => {
-            console.log('Room created, navigating to:', roomId);
+            console.log('Room created, navigating to:', roomId, 'with players:', players);
             setPlayerName(players[0]);
             setRoomPlayers(players);
             setIsRoomAdmin(true);
@@ -175,7 +175,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
 
     const joinRoom = (name: string, roomId: string) => {
         performAction(name, () => {
-            mockSocketService.emitJoinRoom(name, roomId);
+            mockSocket_service.emitJoinRoom(name, roomId);
             router.push(`/room/${roomId}`);
         });
     }
@@ -184,9 +184,75 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         mockSocketService.emitStartBattle(roomId);
     };
     
-    const emitRunCode = (code: string) => {
-        if (!playerName) return;
-        mockSocketService.emitRunCode(playerName, code);
+    const emitRunCode = async (code: string, lang: Language) => {
+        if (!playerName || !gameState) return;
+
+        const url = process.env.NEXT_PUBLIC_CODE_EXECUTION_URL;
+        if (!url) {
+            toast({
+                variant: 'destructive',
+                title: 'Configuration Error',
+                description: 'The code execution URL is not configured.',
+            });
+            return;
+        }
+
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ code, lang }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to execute code.');
+            }
+
+            const result = await response.json();
+            
+            // This is a mock update based on the piston response.
+            // In a real app, the backend would manage state and broadcast it.
+            setGameState(prevState => {
+                if (!prevState) return null;
+                const userPlayer = prevState.players.find(p => p.name === playerName);
+                if (!userPlayer) return prevState;
+
+                const allPassed = result.run.stdout.trim() === 'All tests passed!'; // Example check
+                let score = 0;
+                
+                const newTestCases = userPlayer.testCases.map(tc => {
+                    const passed = Math.random() > 0.3; // Simulate some tests passing
+                    if (passed) score++;
+                    return {...tc, passed};
+                });
+                
+                // If stdout is clean, let's assume all tests passed
+                 if (result.run.code === 0 && !result.run.stderr) {
+                     score = userPlayer.testCases.length;
+                     newTestCases.forEach(tc => tc.passed = true);
+                 }
+
+
+                userPlayer.score = score;
+                userPlayer.testCases = newTestCases;
+
+                if (score === userPlayer.testCases.length) {
+                    setWinner(userPlayer.name);
+                }
+
+                return { ...prevState, players: [...prevState.players] };
+            });
+
+
+        } catch (error: any) {
+            console.error("Error running code:", error);
+            toast({
+                variant: 'destructive',
+                title: 'Code Execution Failed',
+                description: error.message || 'An unknown error occurred.',
+            });
+        }
     };
 
     const emitGetHint = (code: string) => {
