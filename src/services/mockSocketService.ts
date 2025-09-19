@@ -1,5 +1,6 @@
 
 
+
 type Language = "javascript" | "python" | "java" | "cpp";
 
 type StarterCode = {
@@ -34,7 +35,17 @@ type GameState = {
 const problems: Problem[] = [
     {
         title: 'Two Sum',
-        description: 'Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.',
+        description: `Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.
+
+Sample Input: nums = [2, 7, 11, 15], target = 9
+Sample Output: [0, 1]
+Explanation: Because nums[0] + nums[1] == 9, we return [0, 1].
+
+Constraints:
+- 2 <= nums.length <= 10^4
+- -10^9 <= nums[i] <= 10^9
+- -10^9 <= target <= 10^9
+- Only one valid answer exists.`,
         starterCode: {
             javascript: `function twoSum(nums, target) {\n  // Write your code here\n};`,
             python: `def two_sum(nums, target):\n  # Write your code here\n  pass`,
@@ -53,7 +64,13 @@ const problems: Problem[] = [
     },
     {
         title: 'FizzBuzz',
-        description: 'Write a program that prints the numbers from 1 to 100. But for multiples of three print “Fizz” instead of the number and for the multiples of five print “Buzz”. For numbers which are multiples of both three and five print “FizzBuzz”.',
+        description: `Write a program that prints the numbers from 1 to 100. For multiples of three print “Fizz” instead of the number and for the multiples of five print “Buzz”. For numbers which are multiples of both three and five print “FizzBuzz”.
+
+Sample Input: n = 15
+Sample Output: ["1", "2", "Fizz", "4", "Buzz", "Fizz", "7", "8", "Fizz", "Buzz", "11", "Fizz", "13", "14", "FizzBuzz"]
+
+Constraints:
+- The input is the range, typically 1 to 100.`,
         starterCode: {
             javascript: `function fizzBuzz() {\n  // Write your code here\n};`,
             python: `def fizz_buzz():\n  # Write your code here\n  pass`,
@@ -74,7 +91,14 @@ const problems: Problem[] = [
     },
     {
         title: 'Reverse String',
-        description: 'Write a function that reverses a string. The input string is given as an array of characters s.',
+        description: `Write a function that reverses a string. The input string is given as an array of characters s. You must do this by modifying the input array in-place with O(1) extra memory.
+
+Sample Input: s = ["h","e","l","l","o"]
+Sample Output: ["o","l","l","e","h"]
+
+Constraints:
+- 1 <= s.length <= 10^5
+- s[i] is a printable ascii character.`,
         starterCode: {
             javascript: `function reverseString(s) {\n  // Write your code here\n};`,
             python: `def reverse_string(s):\n  # Write your code here\n  pass`,
@@ -93,7 +117,18 @@ const problems: Problem[] = [
     },
      {
         title: 'Is Palindrome',
-        description: 'Given an integer x, return true if x is a palindrome, and false otherwise.',
+        description: `Given an integer x, return true if x is a palindrome, and false otherwise.
+
+Sample Input: x = 121
+Sample Output: true
+Explanation: 121 reads as 121 from left to right and from right to left.
+
+Sample Input: x = -121
+Sample Output: false
+Explanation: From left to right, it reads -121. From right to left, it becomes 121-. Therefore it is not a palindrome.
+
+Constraints:
+- -2^31 <= x <= 2^31 - 1`,
         starterCode: {
             javascript: `function isPalindrome(x) {\n  // Write your code here\n};`,
             python: `def is_palindrome(x):\n  # Write your code here\n  pass`,
@@ -171,7 +206,7 @@ const joinMatchmaking = () => {
 const emitCreateRoom = ({ playerName }: { playerName: string }) => {
     const roomId = `MOCK-${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
     console.log(`${playerName} is creating room ${roomId}`);
-    rooms[roomId] = { players: [playerName] };
+    rooms[roomId] = { players: [playerName, 'Rival_Bot'] };
     
     setTimeout(() => {
         onRoomCreatedCallback?.({ roomId });
