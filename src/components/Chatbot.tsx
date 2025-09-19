@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 import {
   getSupportChatMessage,
 } from "@/ai/flows/support-chat-flow";
-import type { SupportChatMessage } from '@/ai/schemas/support-chat-schemas';
+import type { SupportChatMessage, SupportChatInput } from '@/ai/schemas/support-chat-schemas';
 
 type Message = {
   id: string;
@@ -114,11 +114,16 @@ export function Chatbot() {
         content: msg.text,
       }));
 
-      const result = await getSupportChatMessage({
+      const request: SupportChatInput = {
         message: messageText,
         history: chatHistory,
-        topic: topic,
-      });
+      };
+
+      if (topic) {
+        request.topic = topic;
+      }
+      
+      const result = await getSupportChatMessage(request);
 
       const assistantMessage: Message = {
         id: `assistant-${Date.now()}`,
