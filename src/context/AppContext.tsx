@@ -246,23 +246,25 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
             if (result && result.testCaseResults) {
                 setGameState(prevState => {
                     if (!prevState) return null;
-                    const userPlayer = prevState.players.find(p => p.name === playerName);
-                    if (!userPlayer) return prevState;
-
-                    const passedCount = result.testCaseResults.filter(tc => tc.passed).length;
-                    
-                    const newTestCases = userPlayer.testCases.map((tc, index) => {
-                        return { ...tc, passed: result.testCaseResults[index]?.passed ?? null };
+            
+                    const newPlayers = prevState.players.map(p => {
+                        if (p.name === playerName) {
+                            const passedCount = result.testCaseResults.filter(tc => tc.passed).length;
+                            const newTestCases = p.testCases.map((tc, index) => ({
+                                ...tc,
+                                passed: result.testCaseResults[index]?.passed ?? null,
+                            }));
+                            return { ...p, score: passedCount, testCases: newTestCases };
+                        }
+                        return p;
                     });
 
-                    userPlayer.score = passedCount;
-                    userPlayer.testCases = newTestCases;
-
-                    if (result.finalResult === 'Accepted') {
+                    const userPlayer = newPlayers.find(p => p.name === playerName);
+                    if (result.finalResult === 'Accepted' && userPlayer) {
                         setWinner(userPlayer.name);
                     }
 
-                    return { ...prevState, players: [...prevState.players] };
+                    return { ...prevState, players: newPlayers };
                 });
             }
 
