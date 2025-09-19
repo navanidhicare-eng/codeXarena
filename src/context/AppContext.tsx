@@ -3,7 +3,7 @@
 
 import React, { createContext, useState, useCallback, useEffect, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import socketService from '@/services/socketService';
+import mockSocketService from '@/services/mockSocketService';
 import { useToast } from '@/hooks/use-toast';
 
 type Language = "javascript" | "python" | "java" | "cpp";
@@ -84,49 +84,35 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
     const router = useRouter();
     const { toast } = useToast();
     
-    const connectToServer = useCallback(() => {
-        if (socketService.isConnected()) return;
-
-        const serverUrl = process.env.NODE_ENV === 'production' 
-            ? window.location.origin 
-            : 'http://localhost:3000';
-            
-        socketService.connect(serverUrl);
-        setIsConnected(true);
-    }, []);
-
     useEffect(() => {
-        if(!isConnected) return;
-
-        socketService.onMatchFound((newGameState: GameState) => {
+        mockSocketService.onMatchFound((newGameState: GameState) => {
             console.log("Match found, updating state:", newGameState);
             setGameState(newGameState);
-            router.push(`/arena/${newGameState.matchId}`);
         });
         
-        socketService.onMatchFoundForRoom((newGameState: GameState) => {
+        mockSocketService.onMatchFoundForRoom((newGameState: GameState) => {
             console.log("Room match found, updating state:", newGameState);
             setGameState(newGameState);
             setRoomPlayers([]);
             router.push(`/arena/${newGameState.matchId}`);
         });
 
-        socketService.onStateUpdate((updatedGameState: GameState) => {
+        mockSocketService.onStateUpdate((updatedGameState: GameState) => {
             console.log("State updated:", updatedGameState);
             setGameState(updatedGameState);
         });
 
-        socketService.onGameOver((gameOverState: { winner: string }) => {
+        mockSocketService.onGameOver((gameOverState: { winner: string }) => {
             console.log("Game over:", gameOverState);
             setWinner(gameOverState.winner);
         });
 
-        socketService.onHintResult((hintResult: { hint: string }) => {
+        mockSocketService.onHintResult((hintResult: { hint: string }) => {
             setHint(hintResult.hint);
             setIsHintLoading(false);
         });
 
-        socketService.onHintError((error: { message: string }) => {
+        mockSocketService.onHintError((error: { message: string }) => {
             toast({
                 variant: "destructive",
                 title: "AI Hint Error",
@@ -136,23 +122,23 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
             setIsHintLoading(false);
         });
 
-        socketService.onEmojiReceive((data: { emoji: string }) => {
+        mockSocketService.onEmojiReceive((data: { emoji: string }) => {
             setOpponentEmoji(data.emoji);
             setTimeout(() => setOpponentEmoji(null), 2000);
         });
 
-        socketService.onRoomCreated(({ roomId }) => {
+        mockSocketService.onRoomCreated(({ roomId }) => {
             console.log('Room created, navigating to:', roomId);
             setIsRoomAdmin(true);
             router.push(`/room/${roomId}`);
         });
 
-        socketService.onRoomUpdated(({ players }) => {
+        mockSocketService.onRoomUpdated(({ players }) => {
             console.log('Room updated with players:', players);
             setRoomPlayers(players);
         });
 
-        socketService.onRoomJoinFailed(({ error }) => {
+        mockSocketService.onRoomJoinFailed(({ error }) => {
             console.error('Room join failed:', error);
             toast({
                 variant: 'destructive',
@@ -162,57 +148,44 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
             router.push('/');
         });
         
-        return () => {
-             // In a real app with user accounts, you might not want to disconnect
-             // on every component unmount. For this app, it's fine.
-            socketService.disconnect();
-            setIsConnected(false);
-        };
-    }, [router, toast, isConnected]); 
+    }, [router, toast]); 
 
     const performAction = (name: string, action: () => void) => {
         setPlayerName(name);
-        connectToServer();
-        
-        // Wait for connection to be established
-        setTimeout(() => {
-            socketService.emitUpdatePlayerName(name);
-            action();
-        }, 500);
+        mockSocketService.connect(name);
+        action();
     };
 
     const connectAndJoin = (name: string) => {
         performAction(name, () => {
-            socketService.joinMatchmaking();
+            mockSocketService.joinMatchmaking();
             router.push('/matchmaking');
         });
     };
 
     const createRoom = (name: string) => {
         performAction(name, () => {
-             socketService.emitCreateRoom();
+             mockSocketService.emitCreateRoom({ playerName: name });
         });
     }
 
-
-
     const joinRoom = (name: string, roomId: string) => {
         performAction(name, () => {
-            socketService.emitJoinRoom(roomId);
+            mockSocketService.emitJoinRoom(roomId);
         });
     }
 
     const startBattle = (roomId: string) => {
-        socketService.emitStartBattle(roomId);
+        mockSocketService.emitStartBattle(roomId);
     };
     
     const emitRunCode = (code: string) => {
-        socketService.emitRunCode(code);
+        mockSocketService.emitRunCode(code);
     };
 
     const emitGetHint = (code: string) => {
         setIsHintLoading(true);
-        socketService.emitGetHint(code);
+        mockSocketService.emitGetHint(code);
     };
     
     const clearHint = () => {
@@ -220,7 +193,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const sendEmoji = (emoji: string) => {
-        socketService.emitSendEmoji(emoji);
+        mockSocketService.emitSendEmoji(emoji);
     };
 
     return (
