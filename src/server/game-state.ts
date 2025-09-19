@@ -7,6 +7,7 @@ import type { GameState, Problem } from './types';
 export const problems: Problem[] = [
     {
         title: 'Two Sum',
+        functionName: 'twoSum',
         description: 'Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.',
         starterCode: {
             javascript: `function twoSum(nums, target) {\n  // Write your code here\n};`,
@@ -14,39 +15,32 @@ export const problems: Problem[] = [
             java: `class Solution {\n  public int[] twoSum(int[] nums, int target) {\n    // Write your code here\n  }\n}`,
             cpp: `class Solution {\npublic:\n  vector<int> twoSum(vector<int>& nums, int target) {\n    // Write your code here\n  }\n};`
         },
-        solutionChecker: (code, lang) => {
-            const passes = code.includes('Map') || code.includes('{');
-            return [
-                { name: 'Test with positive numbers', passed: passes },
-                { name: 'Test with negative numbers', passed: passes },
-                { name: 'Test with zero', passed: passes },
-                { name: 'Test with large numbers', passed: code.includes('Map') },
-            ];
-        }
+        testCases: [
+            { input: `[2, 7, 11, 15], 9`, expected: '[0,1]' },
+            { input: `[3, 2, 4], 6`, expected: '[1,2]' },
+            { input: `[3, 3], 6`, expected: '[0,1]' },
+            { input: `[-1, -3, 5, 90], 4`, expected: '[2,0]' },
+        ],
     },
     {
         title: 'FizzBuzz',
-        description: 'Write a program that prints the numbers from 1 to 100. But for multiples of three print “Fizz” instead of the number and for the multiples of five print “Buzz”. For numbers which are multiples of both three and five print “FizzBuzz”.',
+        functionName: 'fizzBuzz',
+        description: 'Write a program that returns an array of strings. For multiples of three return “Fizz” instead of the number and for the multiples of five return “Buzz”. For numbers which are multiples of both three and five return “FizzBuzz”.',
         starterCode: {
-            javascript: `function fizzBuzz() {\n  // Write your code here\n};`,
-            python: `def fizz_buzz():\n  # Write your code here\n  pass`,
-            java: `class Solution {\n  public void fizzBuzz() {\n    // Write your code here\n  }\n}`,
-            cpp: `class Solution {\npublic:\n  void fizzBuzz() {\n    // Write your code here\n  }\n};`
+            javascript: `function fizzBuzz(n) {\n  // Write your code here\n};`,
+            python: `def fizz_buzz(n):\n  # Write your code here\n  pass`,
+            java: `class Solution {\n  public List<String> fizzBuzz(int n) {\n    // Write your code here\n  }\n}`,
+            cpp: `class Solution {\npublic:\n  vector<string> fizzBuzz(int n) {\n    // Write your code here\n  }\n};`
         },
-         solutionChecker: (code, lang) => {
-            const hasFizz = code.includes('Fizz');
-            const hasBuzz = code.includes('Buzz');
-            const hasLoop = code.includes('for') || code.includes('while');
-            return [
-                { name: 'Prints Fizz for multiples of 3', passed: hasFizz && hasLoop },
-                { name: 'Prints Buzz for multiples of 5', passed: hasBuzz && hasLoop },
-                { name: 'Prints FizzBuzz for multiples of 15', passed: hasFizz && hasBuzz && hasLoop },
-                { name: 'Handles numbers not divisible by 3 or 5', passed: hasLoop },
-            ];
-        }
+        testCases: [
+            { input: `3`, expected: '["1","2","Fizz"]' },
+            { input: `5`, expected: '["1","2","Fizz","4","Buzz"]' },
+            { input: `15`, expected: '["1","2","Fizz","4","Buzz","Fizz","7","8","Fizz","Buzz","11","Fizz","13","14","FizzBuzz"]' },
+        ],
     },
     {
         title: 'Is Palindrome',
+        functionName: 'isPalindrome',
         description: 'Given an integer x, return true if x is a palindrome, and false otherwise.',
         starterCode: {
             javascript: `function isPalindrome(x) {\n  // Write your code here\n};`,
@@ -54,54 +48,46 @@ export const problems: Problem[] = [
             java: `class Solution {\n  public boolean isPalindrome(int x) {\n    // Write your code here\n  }\n}`,
             cpp: `class Solution {\npublic:\n  bool isPalindrome(int x) {\n    // Write your code here\n  }\n};`
         },
-         solutionChecker: (code, lang) => {
-            const passes = code.includes('reverse') || code.toString().includes('x');
-            return [
-                { name: 'Test with positive palindrome', passed: passes },
-                { name: 'Test with non-palindrome', passed: passes },
-                { name: 'Test with single digit', passed: true },
-                { name: 'Test with negative number', passed: passes },
-            ];
-        }
+         testCases: [
+            { input: '121', expected: 'true' },
+            { input: '-121', expected: 'false' },
+            { input: '10', expected: 'false' },
+            { input: '12321', expected: 'true' },
+        ],
     },
     {
         title: 'Reverse String',
-        description: 'Write a function that reverses a string. The input string is given as an array of characters s.',
+        functionName: 'reverseString',
+        description: 'Write a function that reverses a string. The input string is given as an array of characters s. You must do this by modifying the input array in-place.',
         starterCode: {
-            javascript: `function reverseString(s) {\n  // Write your code here\n};`,
-            python: `def reverse_string(s):\n  # Write your code here\n  pass`,
+            javascript: `function reverseString(s) {\n  // Write your code here. Return the modified array.\n return s; \n};`,
+            python: `def reverse_string(s):\n  # Write your code here. Return the modified list.\n  return s`,
             java: `class Solution {\n  public void reverseString(char[] s) {\n    // Write your code here\n  }\n}`,
             cpp: `class Solution {\npublic:\n  void reverseString(vector<char>& s) {\n    // Write your code here\n  }\n};`
         },
-         solutionChecker: (code, lang) => {
-            const passes = code.includes('reverse') || code.includes('swap') || (code.includes('[') && code.includes(']'));
-            return [
-                { name: 'Test with even length string', passed: passes },
-                { name: 'Test with odd length string', passed: passes },
-                { name: 'Test with empty string', passed: true },
-                { name: 'Test with palindrome', passed: passes },
-            ];
-        }
+         testCases: [
+            { input: '["h","e","l","l","o"]', expected: '["o","l","l","e","h"]' },
+            { input: '["H","a","n","n","a","h"]', expected: '["h","a","n","n","a","H"]' },
+            { input: '["a"]', expected: '["a"]' },
+        ],
     },
     {
         title: 'Valid Parentheses',
-        description: 'Given a string s containing just the characters \'(\', \')\', \'{\', \'}\', \'[\' and \']\', determine if the input string is valid. An input string is valid if: Open brackets must be closed by the same type of brackets. Open brackets must be closed in the correct order. Every close bracket has a corresponding open bracket of the same type.',
+        functionName: 'isValid',
+        description: 'Given a string s containing just the characters \'(\', \')\', \'{\', \'}\', \'[\' and \']\', determine if the input string is valid.',
         starterCode: {
             javascript: `function isValid(s) {\n  // Write your code here\n};`,
             python: `def is_valid(s):\n  # Write your code here\n  pass`,
             java: `class Solution {\n    public boolean isValid(String s) {\n    // Write your code here\n  }\n}`,
             cpp: `class Solution {\npublic:\n    bool isValid(string s) {\n    // Write your code here\n  }\n};`
         },
-        solutionChecker: (code, lang) => {
-            const passes = code.includes('stack') || code.includes('map');
-            return [
-                { name: 'Test with simple valid string "()"', passed: passes },
-                { name: 'Test with complex valid string "()[]{}"', passed: passes },
-                { name: 'Test with invalid string "(]"', passed: passes },
-                { name: 'Test with invalid string "([)]"', passed: passes },
-                { name: 'Test with only open brackets', passed: passes },
-            ];
-        }
+        testCases: [
+            { input: '"()"', expected: 'true' },
+            { input: '"()[]{}"', expected: 'true' },
+            { input: '"(]"', expected: 'false' },
+            { input: '"{[()]}"', expected: 'true' },
+            { input: '"("', expected: 'false' },
+        ],
     }
 ];
 
@@ -112,7 +98,7 @@ export const problems: Problem[] = [
  */
 export const createInitialGameState = (players: string[]): GameState => {
     const currentProblem = problems[Math.floor(Math.random() * problems.length)];
-    const initialTestCases = currentProblem.solutionChecker('', 'javascript').map(tc => ({ name: tc.name, passed: null }));
+    const initialTestCases = currentProblem.testCases.map((tc, i) => ({ name: `Test Case ${i+1}`, passed: null }));
 
     return {
         matchId: `match-${Date.now()}-${Math.random().toString(36).substr(2, 5)}`,

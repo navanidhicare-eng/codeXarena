@@ -74,7 +74,7 @@ export default function ArenaView() {
 
   const handleRunCode = async () => {
     setIsCodeRunning(true);
-    await emitRunCode(playerCode, selectedLanguage);
+    await emitRunCode(playerCode, selectedLanguage, gameState?.problem.title || "");
     setIsCodeRunning(false);
   };
 
@@ -187,7 +187,6 @@ export default function ArenaView() {
                   <PlayerPanel
                     playerData={{
                       code: playerCode,
-                      testCases: self.testCases.map(tc => tc.passed),
                       output: codeOutput,
                     }}
                     selectedLanguage={selectedLanguage}

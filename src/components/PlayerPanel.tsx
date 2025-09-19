@@ -9,8 +9,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { TestCasesPanel } from "@/components/TestCasesPanel";
-import { Lightbulb, Loader2, Play, Code, Terminal, Clipboard } from "lucide-react";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
+import { Lightbulb, Loader2, Play, Code, Terminal, Clipboard, CheckCircle2, XCircle } from "lucide-react";
 import { ScrollArea } from "./ui/scroll-area";
 import {
   Panel,
@@ -20,15 +25,14 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-
+import type { CodeExecutionResult } from "@/context/AppContext";
 
 type Language = "javascript" | "python" | "java" | "cpp";
 
 type PlayerPanelProps = {
   playerData: {
     code: string;
-    testCases: (boolean | null)[];
-    output: { stdout: string | null; stderr: string | null; error: string | null; };
+    output: CodeExecutionResult;
   };
   selectedLanguage: Language;
   onCodeChange: (code: string) => void;
@@ -39,10 +43,27 @@ type PlayerPanelProps = {
   isCodeRunning: boolean;
 };
 
-const OutputDisplay = ({ output }: { output: PlayerPanelProps['playerData']['output'] }) => {
-    const { toast } = useToast();
+const ResultBar = ({ result }: { result: CodeExecutionResult }) => {
+    if (!result.finalResult) return null;
 
-    const hasOutput = output.stdout || output.stderr || output.error;
+    const allPassed = result.finalResult === 'Accepted';
+    const passedCount = result.testCaseResults.filter(r => r.passed).length;
+    const totalCount = result.testCaseResults.length;
+
+    return (
+        <div className={cn(
+            "p-2 rounded-t-lg text-center font-bold font-headline text-lg",
+            allPassed ? "bg-success/20 text-success shadow-success-glow" : "bg-destructive/20 text-destructive"
+        )}>
+            {allPassed ? 'Accepted' : `Wrong Answer: ${passedCount} / ${totalCount} Cases Passed`}
+        </div>
+    );
+};
+
+
+const OutputDisplay = ({ result }: { result: CodeExecutionResult }) => {
+    const { toast } = useToast();
+    const hasOutput = result.stdout || result.stderr || result.error;
 
     const handleCopy = (text: string | null) => {
         if (!text) return;
@@ -51,36 +72,74 @@ const OutputDisplay = ({ output }: { output: PlayerPanelProps['playerData']['out
     }
 
     if (!hasOutput) {
-        return <p className="text-muted-foreground text-sm p-4">Run your code to see the output here.</p>;
+        return <p className="text-muted-foreground text-sm p-4">Run your code to see the console output here.</p>;
     }
 
     return (
-        <div className="font-code text-sm p-2 relative">
-            {output.stdout && (
+        <div className="font-code text-sm p-2 relative bg-black/50 rounded-lg">
+            {result.stdout && (
                  <div className="group">
-                    <pre className="text-foreground whitespace-pre-wrap p-2 rounded-md bg-transparent">{output.stdout}</pre>
-                     <Button variant="ghost" size="icon" className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleCopy(output.stdout)}>
+                    <pre className="text-foreground whitespace-pre-wrap p-2 rounded-md bg-transparent">{result.stdout}</pre>
+                     <Button variant="ghost" size="icon" className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleCopy(result.stdout)}>
                         <Clipboard className="w-4 h-4" />
                     </Button>
                  </div>
             )}
-            {output.stderr && (
+            {result.stderr && (
                  <div className="group mt-2">
-                    <pre className="text-destructive whitespace-pre-wrap p-2 rounded-md bg-destructive/10">{output.stderr}</pre>
-                     <Button variant="ghost" size="icon" className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleCopy(output.stderr)}>
+                    <pre className="text-destructive whitespace-pre-wrap p-2 rounded-md bg-destructive/10">{result.stderr}</pre>
+                     <Button variant="ghost" size="icon" className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleCopy(result.stderr)}>
                         <Clipboard className="w-4 h-4" />
                     </Button>
                  </div>
             )}
-             {output.error && (
+             {result.error && (
                  <div className="group mt-2">
-                    <pre className="text-destructive whitespace-pre-wrap p-2 rounded-md bg-destructive/10">{output.error}</pre>
-                      <Button variant="ghost" size="icon" className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleCopy(output.error)}>
+                    <pre className="text-destructive whitespace-pre-wrap p-2 rounded-md bg-destructive/10">{result.error}</pre>
+                      <Button variant="ghost" size="icon" className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleCopy(result.error)}>
                         <Clipboard className="w-4 h-4" />
                     </Button>
                  </div>
             )}
         </div>
+    )
+}
+
+const TestCasesDisplay = ({ results }: { results: CodeExecutionResult['testCaseResults'] }) => {
+    if (results.length === 0) {
+        return <p className="text-muted-foreground text-sm p-4">Run your code to see test case results.</p>;
+    }
+
+    return (
+        <Accordion type="single" collapsible className="w-full">
+            {results.map((tc, index) => (
+                <AccordionItem value={`item-${index}`} key={index}>
+                    <AccordionTrigger className={cn(
+                        "font-code hover:no-underline rounded-lg px-2",
+                        tc.passed ? "text-success" : "text-destructive"
+                    )}>
+                        <div className="flex items-center gap-2">
+                             {tc.passed ? <CheckCircle2 className="h-5 w-5" /> : <XCircle className="h-5 w-5" />}
+                             Test Case {index + 1}: {tc.passed ? "Accepted" : "Wrong Answer"}
+                        </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="p-2 space-y-2">
+                        <div className="bg-black/30 p-3 rounded-md">
+                            <h4 className="font-semibold text-muted-foreground text-xs uppercase">Input</h4>
+                            <pre className="font-code text-sm whitespace-pre-wrap">{tc.input}</pre>
+                        </div>
+                         <div className="bg-black/30 p-3 rounded-md">
+                            <h4 className="font-semibold text-muted-foreground text-xs uppercase">Your Output</h4>
+                            <pre className="font-code text-sm whitespace-pre-wrap text-destructive">{tc.output}</pre>
+                        </div>
+                        <div className="bg-black/30 p-3 rounded-md">
+                            <h4 className="font-semibold text-muted-foreground text-xs uppercase">Expected Output</h4>
+                            <pre className="font-code text-sm whitespace-pre-wrap text-success">{tc.expected}</pre>
+                        </div>
+                    </AccordionContent>
+                </AccordionItem>
+            ))}
+        </Accordion>
     )
 }
 
@@ -127,26 +186,29 @@ export function PlayerPanel({
             <div className="h-1 w-12 bg-border rounded-full" />
         </PanelResizeHandle>
         <Panel defaultSize={40} minSize={20}>
-           <Tabs defaultValue="tests" className="h-full flex flex-col">
-              <TabsList className="bg-transparent p-0 justify-start border-b border-border rounded-none mb-2">
-                  <TabsTrigger value="tests" className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent rounded-none">
-                     Test Cases
-                  </TabsTrigger>
-                  <TabsTrigger value="output" className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent rounded-none">
-                     <Terminal className="w-4 h-4 mr-2" /> Output
-                  </TabsTrigger>
-              </TabsList>
-               <TabsContent value="tests" className="flex-grow mt-0">
-                <ScrollArea className="h-full">
-                  <TestCasesPanel testCases={playerData.testCases} />
-                </ScrollArea>
-              </TabsContent>
-              <TabsContent value="output" className="flex-grow mt-0">
-                  <ScrollArea className="h-full">
-                     <OutputDisplay output={playerData.output} />
-                  </ScrollArea>
-              </TabsContent>
-            </Tabs>
+            <div className={cn("h-full flex flex-col border-2 rounded-lg", playerData.output.finalResult === "Accepted" ? "border-success/50" : playerData.output.finalResult ? "border-destructive/50" : "border-transparent")}>
+                <ResultBar result={playerData.output} />
+                <Tabs defaultValue="tests" className="h-full flex flex-col flex-grow">
+                    <TabsList className="bg-transparent p-0 justify-start border-b border-border rounded-none mb-2 px-2">
+                        <TabsTrigger value="tests" className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent rounded-none">
+                            Test Cases
+                        </TabsTrigger>
+                        <TabsTrigger value="output" className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent rounded-none">
+                            <Terminal className="w-4 h-4 mr-2" /> Console
+                        </TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="tests" className="flex-grow mt-0 px-2">
+                        <ScrollArea className="h-full">
+                           <TestCasesDisplay results={playerData.output.testCaseResults} />
+                        </ScrollArea>
+                    </TabsContent>
+                    <TabsContent value="output" className="flex-grow mt-0 px-2">
+                        <ScrollArea className="h-full">
+                            <OutputDisplay result={playerData.output} />
+                        </ScrollArea>
+                    </TabsContent>
+                </Tabs>
+            </div>
         </Panel>
       </PanelGroup>
 
@@ -167,14 +229,14 @@ export function PlayerPanel({
         <Button
           onClick={onRunCode}
           disabled={isCodeRunning}
-          className="bg-success text-background hover:bg-success/80"
+          className="bg-success text-background hover:bg-success/80 w-40"
         >
           {isCodeRunning ? (
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
           ) : (
             <Play className="mr-2 h-4 w-4" />
           )}
-          Run Tests
+          Run & Verify
         </Button>
       </div>
     </div>

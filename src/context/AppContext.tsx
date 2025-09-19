@@ -32,7 +32,16 @@ type GameState = {
     status: 'waiting' | 'in-progress' | 'finished';
 };
 
-type CodeOutput = {
+export type TestCaseResult = {
+    input: string;
+    output: string;
+    expected: string;
+    passed: boolean;
+}
+
+export type CodeExecutionResult = {
+    finalResult: 'Accepted' | 'Wrong Answer' | 'Error' | null;
+    testCaseResults: TestCaseResult[];
     stdout: string | null;
     stderr: string | null;
     error: string | null;
@@ -47,11 +56,11 @@ interface AppContextType {
     opponentEmoji: string | null;
     roomPlayers: string[];
     isRoomAdmin: boolean;
-    codeOutput: CodeOutput;
+    codeOutput: CodeExecutionResult;
     connectAndJoin: (name: string) => void;
     createRoom: (playerName: string) => void;
     joinRoom: (playerName: string, roomId: string) => void;
-    emitRunCode: (code: string, lang: Language) => void;
+    emitRunCode: (code: string, lang: Language, problemTitle: string) => void;
     emitGetHint: (code: string) => void;
     clearHint: () => void;
     sendEmoji: (emoji: string) => void;
@@ -59,7 +68,14 @@ interface AppContextType {
     leaveGame: () => void;
 }
 
-const initialCodeOutput = { stdout: null, stderr: null, error: null };
+const initialCodeOutput: CodeExecutionResult = {
+    finalResult: null,
+    testCaseResults: [],
+    stdout: null,
+    stderr: null,
+    error: null,
+};
+
 
 export const AppContext = createContext<AppContextType>({
     playerName: '',
@@ -91,7 +107,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
     const [opponentEmoji, setOpponentEmoji] = useState<string | null>(null);
     const [roomPlayers, setRoomPlayers] = useState<string[]>([]);
     const [isRoomAdmin, setIsRoomAdmin] = useState(false);
-    const [codeOutput, setCodeOutput] = useState<CodeOutput>(initialCodeOutput);
+    const [codeOutput, setCodeOutput] = useState<CodeExecutionResult>(initialCodeOutput);
 
     const router = useRouter();
     const { toast } = useToast();
@@ -195,23 +211,19 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         mockSocketService.emitStartBattle(roomId);
     };
     
-    const emitRunCode = async (code: string, lang: Language) => {
+    const emitRunCode = async (code: string, lang: Language, problemTitle: string) => {
         if (!playerName || !gameState) return;
         
         setCodeOutput(initialCodeOutput);
 
         const url = process.env.NEXT_PUBLIC_CODE_EXECUTION_URL;
         if (!url) {
-            // Fallback to mock service if URL is not configured
-             mockSocketService.emitRunCode(playerName, code);
-             const mockOutput = `Mock execution for ${lang}:\nCode: ${code.substring(0, 50)}...`;
-             setCodeOutput({stdout: mockOutput, stderr: null, error: null});
-
             toast({
                 variant: 'destructive',
                 title: 'Configuration Error',
-                description: 'The code execution URL is not configured. Using mock service.',
+                description: 'The code execution URL is not configured.',
             });
+            setCodeOutput({ ...initialCodeOutput, error: "Code execution service is not configured." });
             return;
         }
 
@@ -219,7 +231,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
             const response = await fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ code, lang }),
+                body: JSON.stringify({ code, lang, problemTitle }),
             });
 
             if (!response.ok) {
@@ -227,13 +239,9 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
                 throw new Error(errorData.message || 'Failed to execute code.');
             }
 
-            const result = await response.json();
+            const result: CodeExecutionResult = await response.json();
             
-            setCodeOutput({
-                stdout: result.run.stdout || null,
-                stderr: result.run.stderr || null,
-                error: null
-            });
+            setCodeOutput(result);
             
             // This is a mock update based on the piston response.
             // In a real app, the backend would manage state and broadcast it.
@@ -242,27 +250,16 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
                 const userPlayer = prevState.players.find(p => p.name === playerName);
                 if (!userPlayer) return prevState;
 
-                const allPassed = result.run.stdout.trim() === 'All tests passed!'; // Example check
-                let score = 0;
+                const passedCount = result.testCaseResults.filter(tc => tc.passed).length;
                 
-                const newTestCases = userPlayer.testCases.map(tc => {
-                    // Simulate test cases based on output for now
-                    const passed = Math.random() > 0.3; // Simulate some tests passing
-                    if (passed) score++;
-                    return {...tc, passed};
+                const newTestCases = userPlayer.testCases.map((tc, index) => {
+                    return { ...tc, passed: result.testCaseResults[index]?.passed ?? null };
                 });
-                
-                // If stdout is clean and there's no error code, let's assume all tests passed
-                 if (result.run.code === 0 && !result.run.stderr) {
-                     score = userPlayer.testCases.length;
-                     newTestCases.forEach(tc => tc.passed = true);
-                 }
 
-
-                userPlayer.score = score;
+                userPlayer.score = passedCount;
                 userPlayer.testCases = newTestCases;
 
-                if (score === userPlayer.testCases.length) {
+                if (result.finalResult === 'Accepted') {
                     setWinner(userPlayer.name);
                 }
 
@@ -273,7 +270,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         } catch (error: any) {
             console.error("Error running code:", error);
             const errorMessage = error.message || 'An unknown error occurred.';
-             setCodeOutput({ stdout: null, stderr: null, error: errorMessage });
+             setCodeOutput({ ...initialCodeOutput, error: errorMessage });
             toast({
                 variant: 'destructive',
                 title: 'Code Execution Failed',
