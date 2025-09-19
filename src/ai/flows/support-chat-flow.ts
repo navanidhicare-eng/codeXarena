@@ -60,8 +60,7 @@ Here is a comprehensive overview of CodeXarena's features:
 
 Here is the conversation history:
 {{#each history}}
-{{#if (eq this.role 'user')}}User: {{this.content}}{{/if}}
-{{#if (eq this.role 'assistant')}}Assistant: {{this.content}}{{/if}}
+{{this.role}}: {{this.content}}
 {{/each}}
 
 New user message:
