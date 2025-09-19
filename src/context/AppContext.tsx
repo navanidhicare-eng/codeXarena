@@ -49,6 +49,7 @@ interface AppContextType {
     clearHint: () => void;
     sendEmoji: (emoji: string) => void;
     startBattle: (roomId: string) => void;
+    leaveGame: () => void;
 }
 
 export const AppContext = createContext<AppContextType>({
@@ -68,6 +69,7 @@ export const AppContext = createContext<AppContextType>({
     clearHint: () => {},
     sendEmoji: () => {},
     startBattle: () => {},
+    leaveGame: () => {},
 });
 
 export const AppContextProvider = ({ children }: { children: ReactNode }) => {
@@ -200,6 +202,14 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         mockSocketService.emitSendEmoji(emoji);
     };
 
+    const leaveGame = () => {
+        setGameState(null);
+        setWinner(null);
+        setRoomPlayers([]);
+        setIsRoomAdmin(false);
+        router.push('/');
+    };
+
     return (
         <AppContext.Provider value={{ 
             playerName, 
@@ -218,6 +228,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
             clearHint,
             sendEmoji,
             startBattle,
+            leaveGame,
         }}>
             {children}
         </AppContext.Provider>

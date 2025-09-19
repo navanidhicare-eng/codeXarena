@@ -17,9 +17,12 @@ export function LandingHero() {
   const router = useRouter();
 
   useEffect(() => {
-      if (gameState?.matchId && !window.location.pathname.startsWith('/arena')) {
-          router.push(`/arena/${gameState.matchId}`);
-      }
+    // This effect is problematic as it persists game state across navigations.
+    // If a user navigates away and comes back, they get pushed back into the old game.
+    // We will manage this with a dedicated leaveGame function instead.
+    if (gameState?.matchId && window.location.pathname !== `/arena/${gameState.matchId}`) {
+        // router.push(`/arena/${gameState.matchId}`); // This line is causing the issue.
+    }
   }, [gameState, router]);
 
 
@@ -56,7 +59,7 @@ export function LandingHero() {
 
   const handleJoin = (roomId: string) => {
     if (!playerName.trim() || !roomId.trim()) return;
-    onJoinRoom(playerName.trim(), roomId.trim());
+    joinRoom(playerName.trim(), roomId.trim());
     setJoinModalOpen(false);
   }
 
