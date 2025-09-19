@@ -243,29 +243,28 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
             
             setCodeOutput(result);
             
-            // This is a mock update based on the piston response.
-            // In a real app, the backend would manage state and broadcast it.
-            setGameState(prevState => {
-                if (!prevState) return null;
-                const userPlayer = prevState.players.find(p => p.name === playerName);
-                if (!userPlayer) return prevState;
+            if (result && result.testCaseResults) {
+                setGameState(prevState => {
+                    if (!prevState) return null;
+                    const userPlayer = prevState.players.find(p => p.name === playerName);
+                    if (!userPlayer) return prevState;
 
-                const passedCount = result.testCaseResults.filter(tc => tc.passed).length;
-                
-                const newTestCases = userPlayer.testCases.map((tc, index) => {
-                    return { ...tc, passed: result.testCaseResults[index]?.passed ?? null };
+                    const passedCount = result.testCaseResults.filter(tc => tc.passed).length;
+                    
+                    const newTestCases = userPlayer.testCases.map((tc, index) => {
+                        return { ...tc, passed: result.testCaseResults[index]?.passed ?? null };
+                    });
+
+                    userPlayer.score = passedCount;
+                    userPlayer.testCases = newTestCases;
+
+                    if (result.finalResult === 'Accepted') {
+                        setWinner(userPlayer.name);
+                    }
+
+                    return { ...prevState, players: [...prevState.players] };
                 });
-
-                userPlayer.score = passedCount;
-                userPlayer.testCases = newTestCases;
-
-                if (result.finalResult === 'Accepted') {
-                    setWinner(userPlayer.name);
-                }
-
-                return { ...prevState, players: [...prevState.players] };
-            });
-
+            }
 
         } catch (error: any) {
             console.error("Error running code:", error);

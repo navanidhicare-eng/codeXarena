@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -44,7 +45,7 @@ type PlayerPanelProps = {
 };
 
 const ResultBar = ({ result }: { result: CodeExecutionResult }) => {
-    if (!result.finalResult) return null;
+    if (!result || !result.finalResult) return null;
 
     const allPassed = result.finalResult === 'Accepted';
     const passedCount = result.testCaseResults.filter(r => r.passed).length;
@@ -106,7 +107,7 @@ const OutputDisplay = ({ result }: { result: CodeExecutionResult }) => {
 }
 
 const TestCasesDisplay = ({ results }: { results: CodeExecutionResult['testCaseResults'] }) => {
-    if (results.length === 0) {
+    if (!results || results.length === 0) {
         return <p className="text-muted-foreground text-sm p-4">Run your code to see test case results.</p>;
     }
 
