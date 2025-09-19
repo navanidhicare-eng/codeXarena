@@ -3,7 +3,7 @@
 
 import React, { createContext, useState, useCallback, useEffect, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import mockSocketService from '@/services/mockSocketService';
+import socketService from '@/services/socketService';
 import { useToast } from '@/hooks/use-toast';
 
 type Language = "javascript" | "python" | "java" | "cpp";
@@ -79,18 +79,29 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
     const [opponentEmoji, setOpponentEmoji] = useState<string | null>(null);
     const [roomPlayers, setRoomPlayers] = useState<string[]>([]);
     const [isRoomAdmin, setIsRoomAdmin] = useState(false);
+    const [isConnected, setIsConnected] = useState(false);
 
     const router = useRouter();
     const { toast } = useToast();
+    
+    const connectToServer = useCallback(() => {
+        if (socketService.isConnected()) return;
+
+        const serverUrl = process.env.NODE_ENV === 'production' 
+            ? window.location.origin 
+            : 'http://localhost:3000';
+            
+        socketService.connect(serverUrl);
+        setIsConnected(true);
+    }, []);
 
     useEffect(() => {
-        const socketService = mockSocketService;
-        
-        socketService.onMatchFound((newGameState: Omit<GameState, 'matchId'>) => {
-            const fullGameState = { ...newGameState, matchId: `mock-${Date.now()}` };
-            console.log("Match found, updating state:", fullGameState);
-            setGameState(fullGameState);
-            router.push(`/arena/${fullGameState.matchId}`);
+        if(!isConnected) return;
+
+        socketService.onMatchFound((newGameState: GameState) => {
+            console.log("Match found, updating state:", newGameState);
+            setGameState(newGameState);
+            router.push(`/arena/${newGameState.matchId}`);
         });
         
         socketService.onMatchFoundForRoom((newGameState: GameState) => {
@@ -152,46 +163,56 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         });
         
         return () => {
-            // No real disconnect needed for mock
+             // In a real app with user accounts, you might not want to disconnect
+             // on every component unmount. For this app, it's fine.
+            socketService.disconnect();
+            setIsConnected(false);
         };
-    }, [router, toast]); 
+    }, [router, toast, isConnected]); 
 
     const performAction = (name: string, action: () => void) => {
         setPlayerName(name);
-        mockSocketService.connect(name);
-        action();
+        connectToServer();
+        
+        // Wait for connection to be established
+        setTimeout(() => {
+            socketService.emitUpdatePlayerName(name);
+            action();
+        }, 500);
     };
 
     const connectAndJoin = (name: string) => {
         performAction(name, () => {
-            mockSocketService.joinMatchmaking();
+            socketService.joinMatchmaking();
             router.push('/matchmaking');
         });
     };
 
     const createRoom = (name: string) => {
         performAction(name, () => {
-             mockSocketService.emitCreateRoom({ playerName: name });
+             socketService.emitCreateRoom();
         });
     }
 
+
+
     const joinRoom = (name: string, roomId: string) => {
         performAction(name, () => {
-            mockSocketService.emitJoinRoom(roomId);
+            socketService.emitJoinRoom(roomId);
         });
     }
 
     const startBattle = (roomId: string) => {
-        mockSocketService.emitStartBattle(roomId);
+        socketService.emitStartBattle(roomId);
     };
     
     const emitRunCode = (code: string) => {
-        mockSocketService.emitRunCode(code);
+        socketService.emitRunCode(code);
     };
 
     const emitGetHint = (code: string) => {
         setIsHintLoading(true);
-        mockSocketService.emitGetHint(code);
+        socketService.emitGetHint(code);
     };
     
     const clearHint = () => {
@@ -199,7 +220,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const sendEmoji = (emoji: string) => {
-        mockSocketService.emitSendEmoji(emoji);
+        socketService.emitSendEmoji(emoji);
     };
 
     return (
