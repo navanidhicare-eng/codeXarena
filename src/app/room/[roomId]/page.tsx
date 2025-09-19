@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Copy, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 
 const QRCode = ({ text }: { text: string }) => {
   if (!text) return null;
@@ -16,8 +16,9 @@ const QRCode = ({ text }: { text: string }) => {
 };
 
 
-export default function RoomWaitingPage({ params }: { params: { roomId: string } }) {
-  const { roomId } = params;
+export default function RoomWaitingPage() {
+  const params = useParams();
+  const roomId = params.roomId as string;
   const { playerName, roomPlayers, isRoomAdmin, startBattle } = useContext(AppContext);
   const { toast } = useToast();
   const router = useRouter();
