@@ -3,7 +3,7 @@
 
 import React, { createContext, useState, useCallback, useEffect, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import socketService from '@/services/socketService';
+import mockSocketService from '@/services/mockSocketService';
 import { useToast } from '@/hooks/use-toast';
 
 type Language = "javascript" | "python" | "java" | "cpp";
@@ -84,20 +84,13 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
     const { toast } = useToast();
 
     useEffect(() => {
-        // This effect runs once on the client to establish the socket connection.
-        const isLocalhost = typeof window !== 'undefined' && window.location.hostname === 'localhost';
-        const socketUrl = isLocalhost ? 'http://localhost:3001' : window.location.origin;
+        const socketService = mockSocketService;
         
-        socketService.connect(socketUrl);
-
-        socketService.on('connect', () => {
-            console.log('Socket.IO connected:', socketService.socket.id);
-        });
-
-        socketService.onMatchFound((newGameState: GameState) => {
-            console.log("Match found, updating state:", newGameState);
-            setGameState(newGameState);
-            router.push(`/arena/${newGameState.matchId}`);
+        socketService.onMatchFound((newGameState: Omit<GameState, 'matchId'>) => {
+            const fullGameState = { ...newGameState, matchId: `mock-${Date.now()}` };
+            console.log("Match found, updating state:", fullGameState);
+            setGameState(fullGameState);
+            router.push(`/arena/${fullGameState.matchId}`);
         });
         
         socketService.onMatchFoundForRoom((newGameState: GameState) => {
@@ -158,56 +151,47 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
             router.push('/');
         });
         
-        // Return a cleanup function to disconnect the socket when the component unmounts.
         return () => {
-            socketService.disconnect();
+            // No real disconnect needed for mock
         };
     }, [router, toast]); 
 
     const performAction = (name: string, action: () => void) => {
         setPlayerName(name);
-        if (socketService.isConnected()) {
-            socketService.emitUpdatePlayerName(name);
-            action();
-        } else {
-            // Wait for connection to be established
-            socketService.on('connect', () => {
-                socketService.emitUpdatePlayerName(name);
-                action();
-            })
-        }
+        mockSocketService.connect(name);
+        action();
     };
 
     const connectAndJoin = (name: string) => {
         performAction(name, () => {
-            socketService.joinMatchmaking();
+            mockSocketService.joinMatchmaking();
             router.push('/matchmaking');
         });
     };
 
     const createRoom = (name: string) => {
         performAction(name, () => {
-             socketService.emitCreateRoom();
+             mockSocketService.emitCreateRoom({ playerName: name });
         });
     }
 
     const joinRoom = (name: string, roomId: string) => {
         performAction(name, () => {
-            socketService.emitJoinRoom(roomId);
+            mockSocketService.emitJoinRoom(roomId);
         });
     }
 
     const startBattle = (roomId: string) => {
-        socketService.emitStartBattle(roomId);
+        mockSocketService.emitStartBattle(roomId);
     };
     
     const emitRunCode = (code: string) => {
-        socketService.emitRunCode(code);
+        mockSocketService.emitRunCode(code);
     };
 
     const emitGetHint = () => {
         setIsHintLoading(true);
-        socketService.emitGetHint();
+        mockSocketService.emitGetHint();
     };
     
     const clearHint = () => {
@@ -215,7 +199,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
     };
 
     const sendEmoji = (emoji: string) => {
-        socketService.emitSendEmoji(emoji);
+        mockSocketService.emitSendEmoji(emoji);
     };
 
     return (
