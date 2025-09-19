@@ -6,6 +6,7 @@ import { AppContext } from "@/context/AppContext";
 import BattleScoreboard from "@/components/BattleScoreboard";
 import { PlayerPanel } from "@/components/PlayerPanel";
 import { OpponentPanel } from "@/components/OpponentPanel";
+import { ProblemPanel } from "@/components/ProblemPanel";
 import { AIHintModal } from "@/components/AIHintModal";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useRouter, useParams } from "next/navigation";
@@ -165,38 +166,46 @@ export default function ArenaView() {
         </AnimatePresence>
       </div>
 
-      <PanelGroup direction="horizontal" className="flex-grow min-h-0">
-        <Panel defaultSize={50}>
-            <section className="bg-panel backdrop-blur-md border border-secondary/20 rounded-lg p-4 h-full overflow-y-auto hidden md:flex flex-col">
-              <OpponentPanel
-                playerData={{
-                  name: opponent.name,
-                  testCases: opponent.testCases.map(tc => tc.passed),
-                }}
-                problem={gameState.problem}
-              />
-            </section>
+      <PanelGroup direction="vertical" className="flex-grow min-h-0">
+        <Panel defaultSize={40} minSize={20}>
+          <ProblemPanel problem={gameState.problem} />
         </Panel>
-        <PanelResizeHandle className="w-4 flex items-center justify-center">
-            <div className="w-1 h-12 bg-border rounded-full" />
+        <PanelResizeHandle className="h-4 flex items-center justify-center">
+            <div className="w-12 h-1 bg-border rounded-full" />
         </PanelResizeHandle>
-        <Panel defaultSize={50}>
-            <section className="bg-panel backdrop-blur-md border border-primary/20 rounded-lg p-4 h-full overflow-y-auto flex flex-col">
-              <PlayerPanel
-                problem={gameState.problem}
-                playerData={{
-                  code: playerCode,
-                  testCases: self.testCases.map(tc => tc.passed),
-                }}
-                selectedLanguage={selectedLanguage}
-                onCodeChange={handleCodeChange}
-                onLanguageChange={handleLanguageChange}
-                onRunCode={handleRunCode}
-                onGetHint={handleGetHint}
-                isHintLoading={isHintLoading}
-                isCodeRunning={isCodeRunning}
-              />
-            </section>
+        <Panel defaultSize={60} minSize={30}>
+           <PanelGroup direction="horizontal" className="h-full">
+             <Panel defaultSize={50}>
+                <section className="bg-panel backdrop-blur-md border border-primary/20 rounded-lg p-4 h-full overflow-y-auto flex flex-col">
+                  <PlayerPanel
+                    playerData={{
+                      code: playerCode,
+                      testCases: self.testCases.map(tc => tc.passed),
+                    }}
+                    selectedLanguage={selectedLanguage}
+                    onCodeChange={handleCodeChange}
+                    onLanguageChange={handleLanguageChange}
+                    onRunCode={handleRunCode}
+                    onGetHint={handleGetHint}
+                    isHintLoading={isHintLoading}
+                    isCodeRunning={isCodeRunning}
+                  />
+                </section>
+            </Panel>
+             <PanelResizeHandle className="w-4 flex items-center justify-center">
+                <div className="w-1 h-12 bg-border rounded-full" />
+            </PanelResizeHandle>
+             <Panel defaultSize={50}>
+                <section className="bg-panel backdrop-blur-md border border-secondary/20 rounded-lg p-4 h-full overflow-y-auto hidden md:flex flex-col">
+                  <OpponentPanel
+                    playerData={{
+                      name: opponent.name,
+                      testCases: opponent.testCases.map(tc => tc.passed),
+                    }}
+                  />
+                </section>
+            </Panel>
+           </PanelGroup>
         </Panel>
       </PanelGroup>
 

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -21,10 +22,6 @@ import {
 type Language = "javascript" | "python" | "java" | "cpp";
 
 type PlayerPanelProps = {
-  problem: {
-    title: string;
-    description: string;
-  };
   playerData: {
     code: string;
     testCases: (boolean | null)[];
@@ -39,7 +36,6 @@ type PlayerPanelProps = {
 };
 
 export function PlayerPanel({
-  problem,
   playerData,
   selectedLanguage,
   onCodeChange,
@@ -81,7 +77,7 @@ export function PlayerPanel({
         <PanelResizeHandle className="h-4 flex items-center justify-center">
             <div className="h-1 w-12 bg-border rounded-full" />
         </PanelResizeHandle>
-        <Panel defaultSize={40} minSize={20} className="pt-4">
+        <Panel defaultSize={40} minSize={20}>
           <ScrollArea className="h-full">
             <TestCasesPanel testCases={playerData.testCases} />
           </ScrollArea>
