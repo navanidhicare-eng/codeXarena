@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useContext } from "react";
@@ -16,6 +17,7 @@ import {
 import { EmojiToolbar } from "@/components/EmojiToolbar";
 import { motion, AnimatePresence } from "framer-motion";
 import { DiceRollAnimation } from "@/components/DiceRollAnimation";
+import mockSocketService from "@/services/mockSocketService";
 
 type Language = "javascript" | "python" | "java" | "cpp";
 
@@ -86,6 +88,27 @@ export default function ArenaView() {
     setShowDiceRoll(false);
   }
 
+  const handleTimeUp = () => {
+    if (!gameState) return;
+
+    const self = gameState.players.find((p) => p.name === playerName);
+    const opponent = gameState.players.find((p) => p.name !== playerName);
+
+    if (!self || !opponent) return;
+
+    let winner = null;
+    if (self.score > opponent.score) {
+      winner = self.name;
+    } else if (opponent.score > self.score) {
+      winner = opponent.name;
+    } else {
+      winner = "Draw"; // Or handle draw case specifically
+    }
+    
+    // Use the mock service to end the game
+    mockSocketService.endGameOnTimeUp(winner);
+  };
+
   if (!isMounted) {
     return null; // or a loading skeleton
   }
@@ -126,6 +149,7 @@ export default function ArenaView() {
           player1={{ name: self.name, score: self.testCases.filter(c => c.passed).length }}
           player2={{ name: opponent.name, score: opponent.testCases.filter(c => c.passed).length }}
           totalTests={self.testCases.length}
+          onTimeUp={handleTimeUp}
         />
          <AnimatePresence>
           {opponentEmoji && (

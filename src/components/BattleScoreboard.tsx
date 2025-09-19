@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState, useRef } from "react";
@@ -12,6 +13,7 @@ type BattleScoreboardProps = {
   player1: PlayerScore;
   player2: PlayerScore;
   totalTests: number;
+  onTimeUp: () => void;
 };
 
 function usePrevious<T>(value: T) {
@@ -22,9 +24,16 @@ function usePrevious<T>(value: T) {
   return ref.current;
 }
 
-export default function BattleScoreboard({ player1, player2, totalTests }: BattleScoreboardProps) {
+const formatTime = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+};
+
+export default function BattleScoreboard({ player1, player2, totalTests, onTimeUp }: BattleScoreboardProps) {
   const [p1Flash, setP1Flash] = useState(false);
   const [p2Flash, setP2Flash] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(900); // 15 minutes in seconds
 
   const prevP1Score = usePrevious(player1.score);
   const prevP2Score = usePrevious(player2.score);
@@ -44,6 +53,19 @@ export default function BattleScoreboard({ player1, player2, totalTests }: Battl
       return () => clearTimeout(timer);
     }
   }, [player2.score, prevP2Score]);
+  
+  useEffect(() => {
+    if (timeLeft <= 0) {
+      onTimeUp();
+      return;
+    }
+
+    const timer = setInterval(() => {
+      setTimeLeft((prevTime) => prevTime - 1);
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [timeLeft, onTimeUp]);
 
   const ScoreDisplay = ({ flash, score, total }: { flash: boolean, score: number, total: number }) => (
     <span className={cn(
@@ -67,7 +89,12 @@ export default function BattleScoreboard({ player1, player2, totalTests }: Battl
 
       {/* Timer / Status */}
       <div className="text-center">
-        <div className="font-code text-4xl font-bold text-secondary">14:53</div>
+        <div className={cn(
+            "font-code text-4xl font-bold",
+            timeLeft > 60 ? "text-secondary" : "text-destructive animate-pulse"
+        )}>
+            {formatTime(timeLeft)}
+        </div>
       </div>
 
       {/* Player 2 */}

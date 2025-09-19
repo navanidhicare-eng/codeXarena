@@ -1,5 +1,6 @@
 
 
+
 import { getAiHint } from '@/ai/flows/ai-hint-system';
 
 
@@ -383,6 +384,16 @@ const emitSendEmoji = (emoji: string) => {
     console.log(`Player sent emoji: ${emoji}`);
 };
 
+const endGameOnTimeUp = (winner: string) => {
+    if (activeGameState) {
+        activeGameState.status = 'finished';
+        onGameOverCallback?.({ winner });
+        if (simulationInterval) {
+            clearInterval(simulationInterval);
+        }
+    }
+};
+
 
 // --- Callback setters ---
 const on = (eventName: string, callback: (...args: any[]) => void) => {
@@ -413,6 +424,7 @@ const mockSocketService = {
   emitRunCode,
   emitGetHint,
   emitSendEmoji,
+  endGameOnTimeUp,
   on,
   off,
   onMatchFound: (cb: any) => on('matchmaking:success', cb),
