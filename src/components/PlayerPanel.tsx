@@ -187,28 +187,36 @@ export function PlayerPanel({
             <div className="h-1 w-12 bg-border rounded-full" />
         </PanelResizeHandle>
         <Panel defaultSize={40} minSize={20}>
-            <div className={cn("h-full flex flex-col border-2 rounded-lg", playerData.output.finalResult === "Accepted" ? "border-success/50" : playerData.output.finalResult ? "border-destructive/50" : "border-transparent")}>
-                <ResultBar result={playerData.output} />
-                <Tabs defaultValue="tests" className="h-full flex flex-col flex-grow">
-                    <TabsList className="bg-transparent p-0 justify-start border-b border-border rounded-none mb-2 px-2">
-                        <TabsTrigger value="tests" className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent rounded-none">
-                            Test Cases
-                        </TabsTrigger>
-                        <TabsTrigger value="output" className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent rounded-none">
-                            <Terminal className="w-4 h-4 mr-2" /> Console
-                        </TabsTrigger>
-                    </TabsList>
-                    <TabsContent value="tests" className="flex-grow mt-0 px-2">
-                        <ScrollArea className="h-full">
-                           <TestCasesDisplay results={playerData.output.testCaseResults} />
-                        </ScrollArea>
-                    </TabsContent>
-                    <TabsContent value="output" className="flex-grow mt-0 px-2">
-                        <ScrollArea className="h-full">
-                            <OutputDisplay result={playerData.output} />
-                        </ScrollArea>
-                    </TabsContent>
-                </Tabs>
+            <div className={cn("h-full flex flex-col border-2 rounded-lg", playerData.output && playerData.output.finalResult === "Accepted" ? "border-success/50" : playerData.output && playerData.output.finalResult ? "border-destructive/50" : "border-transparent")}>
+                {playerData.output && playerData.output.finalResult ? (
+                    <>
+                        <ResultBar result={playerData.output} />
+                        <Tabs defaultValue="tests" className="h-full flex flex-col flex-grow">
+                            <TabsList className="bg-transparent p-0 justify-start border-b border-border rounded-none mb-2 px-2">
+                                <TabsTrigger value="tests" className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent rounded-none">
+                                    Test Cases
+                                </TabsTrigger>
+                                <TabsTrigger value="output" className="data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:bg-transparent rounded-none">
+                                    <Terminal className="w-4 h-4 mr-2" /> Console
+                                </TabsTrigger>
+                            </TabsList>
+                            <TabsContent value="tests" className="flex-grow mt-0 px-2">
+                                <ScrollArea className="h-full">
+                                <TestCasesDisplay results={playerData.output.testCaseResults} />
+                                </ScrollArea>
+                            </TabsContent>
+                            <TabsContent value="output" className="flex-grow mt-0 px-2">
+                                <ScrollArea className="h-full">
+                                    <OutputDisplay result={playerData.output} />
+                                </ScrollArea>
+                            </TabsContent>
+                        </Tabs>
+                    </>
+                ) : (
+                    <div className="flex items-center justify-center h-full text-muted-foreground">
+                        Run your code to see the results.
+                    </div>
+                )}
             </div>
         </Panel>
       </PanelGroup>
@@ -243,3 +251,5 @@ export function PlayerPanel({
     </div>
   );
 }
+
+    

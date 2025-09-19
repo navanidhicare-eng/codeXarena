@@ -60,7 +60,7 @@ interface AppContextType {
     connectAndJoin: (name: string) => void;
     createRoom: (playerName: string) => void;
     joinRoom: (playerName: string, roomId: string) => void;
-    emitRunCode: (code: string, lang: Language, problemTitle: string) => void;
+    emitRunCode: (code: string, lang: Language, problemTitle: string) => Promise<void>;
     emitGetHint: (code: string) => void;
     clearHint: () => void;
     sendEmoji: (emoji: string) => void;
@@ -90,7 +90,7 @@ export const AppContext = createContext<AppContextType>({
     connectAndJoin: () => {},
     createRoom: () => {},
     joinRoom: () => {},
-    emitRunCode: () => {},
+    emitRunCode: async () => {},
     emitGetHint: () => {},
     clearHint: () => {},
     sendEmoji: () => {},
@@ -269,7 +269,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         } catch (error: any) {
             console.error("Error running code:", error);
             const errorMessage = error.message || 'An unknown error occurred.';
-             setCodeOutput({ ...initialCodeOutput, error: errorMessage });
+             setCodeOutput({ ...initialCodeOutput, finalResult: 'Error', error: errorMessage });
             toast({
                 variant: 'destructive',
                 title: 'Code Execution Failed',
@@ -325,3 +325,5 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
         </AppContext.Provider>
     );
 };
+
+    
