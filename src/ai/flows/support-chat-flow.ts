@@ -25,6 +25,8 @@ CodeXarena is a competitive coding platform where users engage in head-to-head b
 
 When asked about a specific feature (like "Events", "Clans", "Bug Hunts"), give a concise and helpful overview of that feature. If the user asks a general question, use the context provided to answer it.
 
+If the user says they "need more details" about a specific topic, provide a more in-depth explanation of that feature, covering more of its sub-features and nuances.
+
 Keep your responses concise, friendly, and helpful. If you don't know the answer, say so. Do not make up information.
 
 Here is a comprehensive overview of CodeXarena's features:
@@ -65,6 +67,9 @@ Here is the conversation history:
 
 New user message:
 {{{message}}}
+{{#if topic}}
+(The user is asking for more details about: {{{topic}}})
+{{/if}}
 `,
 });
 

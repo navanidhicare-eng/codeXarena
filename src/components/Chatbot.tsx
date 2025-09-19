@@ -4,7 +4,7 @@
 import { useState, useRef, useEffect, FormEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Balancer from "react-wrap-balancer";
-import { Bot, Loader2, Send, Sparkles, User, X } from "lucide-react";
+import { Bot, Loader2, Send, Sparkles, User, X, Check, Brain } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -13,13 +13,12 @@ import {
   getSupportChatMessage,
 } from "@/ai/flows/support-chat-flow";
 import type { SupportChatMessage } from '@/ai/schemas/support-chat-schemas';
-import { useToast } from "@/hooks/use-toast";
 
 type Message = {
   id: string;
   role: "user" | "assistant";
   text: string;
-  options?: string[];
+  isFeatureResponse?: boolean;
 };
 
 const QuickActions = ({ onSelect }: { onSelect: (action: string) => void }) => {
@@ -39,10 +38,32 @@ const QuickActions = ({ onSelect }: { onSelect: (action: string) => void }) => {
       ))}
     </div>
   );
-}
+};
+
+const FollowUpActions = ({ onSelect }: { onSelect: (action: string) => void }) => {
+  return (
+    <div className="flex gap-2 mt-2">
+        <Button
+          variant="outline"
+          size="sm"
+          className="bg-green-500/20 border-green-500/50 hover:bg-green-500/30 text-green-300"
+          onClick={() => onSelect("understand")}
+        >
+          <Check className="w-4 h-4 mr-2"/> I understand
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          className="bg-blue-500/20 border-blue-500/50 hover:bg-blue-500/30 text-blue-300"
+          onClick={() => onSelect("details")}
+        >
+          <Brain className="w-4 h-4 mr-2"/> I need more details
+        </Button>
+    </div>
+  );
+};
 
 export function Chatbot() {
-  const { toast } = useToast();
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -51,9 +72,9 @@ export function Chatbot() {
       id: "initial-message",
       role: "assistant",
       text: "Hello! I'm your CodeXarena assistant. How can I help you? You can ask me a question or choose one of the options below.",
-      options: ["Events", "Clans", "Bug Hunts"],
     },
   ]);
+  const [currentTopic, setCurrentTopic] = useState<string | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   const toggleChat = () => setIsOpen(!isOpen);
@@ -71,7 +92,7 @@ export function Chatbot() {
     }
   }, [isOpen, messages]);
 
-  const handleSendMessage = async (messageText: string) => {
+  const handleSendMessage = async (messageText: string, topic: string | null = null, isFeatureQuery: boolean = false) => {
     if (!messageText.trim() || isLoading) return;
 
     const userMessage: Message = {
@@ -83,6 +104,10 @@ export function Chatbot() {
     setInput("");
     setIsLoading(true);
 
+    if (isFeatureQuery) {
+        setCurrentTopic(messageText);
+    }
+
     try {
       const chatHistory: SupportChatMessage[] = messages.map((msg) => ({
         role: msg.role,
@@ -92,12 +117,14 @@ export function Chatbot() {
       const result = await getSupportChatMessage({
         message: messageText,
         history: chatHistory,
+        topic: topic,
       });
 
       const assistantMessage: Message = {
         id: `assistant-${Date.now()}`,
         role: "assistant",
         text: result.text,
+        isFeatureResponse: isFeatureQuery || !!topic,
       };
       setMessages((prev) => [...prev, assistantMessage]);
     } catch (error) {
@@ -108,7 +135,6 @@ export function Chatbot() {
         text: "Sorry, I encountered an error. Please try asking in a different way."
       };
       setMessages((prev) => [...prev, errorMessage]);
-      
     } finally {
       setIsLoading(false);
     }
@@ -116,11 +142,31 @@ export function Chatbot() {
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
+    setCurrentTopic(null); // Reset topic on new manual input
     handleSendMessage(input);
   }
   
   const handleQuickActionSelect = (action: string) => {
-    handleSendMessage(action);
+    handleSendMessage(action, null, true);
+  }
+
+  const handleFollowUpSelect = (action: string) => {
+      if (action === "understand") {
+          const understandMessage: Message = {
+              id: `user-${Date.now()}`,
+              role: 'user',
+              text: "I understand."
+          };
+          const nextStepsMessage: Message = {
+              id: `assistant-${Date.now()}`,
+              role: 'assistant',
+              text: "Great! What else can I help you with?",
+          };
+          setMessages(prev => [...prev, understandMessage, nextStepsMessage]);
+          setCurrentTopic(null);
+      } else if (action === "details" && currentTopic) {
+          handleSendMessage(`I need more details`, currentTopic, false);
+      }
   }
 
   return (
@@ -158,37 +204,44 @@ export function Chatbot() {
 
               <ScrollArea className="flex-grow p-4" ref={scrollAreaRef}>
                 <div className="flex flex-col gap-4">
-                  {messages.map((message) => (
-                    <div
-                      key={message.id}
-                      className={cn(
-                        "flex items-start gap-3",
-                        message.role === "user" && "justify-end"
-                      )}
-                    >
-                      {message.role === "assistant" && (
-                        <div className="w-8 h-8 rounded-full bg-secondary/20 flex items-center justify-center shrink-0">
-                          <Bot className="w-5 h-5 text-secondary" />
+                  {messages.map((message) => {
+                    const lastMessage = messages[messages.length - 1];
+                    const showQuickActions = message.id === 'initial-message' || (message.id === lastMessage.id && message.role === 'assistant' && !message.isFeatureResponse);
+                    const showFollowUpActions = message.id === lastMessage.id && message.role === 'assistant' && message.isFeatureResponse;
+
+                    return (
+                        <div
+                          key={message.id}
+                          className={cn(
+                            "flex items-start gap-3",
+                            message.role === "user" && "justify-end"
+                          )}
+                        >
+                          {message.role === "assistant" && (
+                            <div className="w-8 h-8 rounded-full bg-secondary/20 flex items-center justify-center shrink-0">
+                              <Bot className="w-5 h-5 text-secondary" />
+                            </div>
+                          )}
+                          <div
+                            className={cn(
+                              "max-w-[80%] rounded-lg px-4 py-2 text-sm",
+                              message.role === "assistant"
+                                ? "bg-background/50 text-foreground/90"
+                                : "bg-primary text-primary-foreground"
+                            )}
+                          >
+                            <Balancer>{message.text}</Balancer>
+                            {showQuickActions && <QuickActions onSelect={handleQuickActionSelect} />}
+                            {showFollowUpActions && <FollowUpActions onSelect={handleFollowUpSelect} />}
+                          </div>
+                          {message.role === "user" && (
+                            <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+                              <User className="w-5 h-5 text-primary" />
+                            </div>
+                          )}
                         </div>
-                      )}
-                      <div
-                        className={cn(
-                          "max-w-[80%] rounded-lg px-4 py-2 text-sm",
-                          message.role === "assistant"
-                            ? "bg-background/50 text-foreground/90"
-                            : "bg-primary text-primary-foreground"
-                        )}
-                      >
-                        <Balancer>{message.text}</Balancer>
-                        {message.id === 'initial-message' && <QuickActions onSelect={handleQuickActionSelect} />}
-                      </div>
-                       {message.role === "user" && (
-                        <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
-                          <User className="w-5 h-5 text-primary" />
-                        </div>
-                      )}
-                    </div>
-                  ))}
+                    );
+                  })}
                   {isLoading && (
                     <div className="flex items-start gap-3">
                        <div className="w-8 h-8 rounded-full bg-secondary/20 flex items-center justify-center shrink-0">
