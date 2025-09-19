@@ -27,6 +27,7 @@ const corsMiddleware = cors({
             callback(new Error("Not allowed by CORS"));
         }
     },
+    optionsSuccessStatus: 200 // Add this line to handle pre-flight requests
 });
 
 type TestCaseResult = {
