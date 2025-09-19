@@ -76,7 +76,7 @@ export function Chatbot() {
       const assistantMessage: Message = {
         id: `assistant-${Date.now()}`,
         role: "assistant",
-        text: result.response,
+        text: result.text,
       };
       setMessages((prev) => [...prev, assistantMessage]);
     } catch (error) {

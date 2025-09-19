@@ -13,6 +13,6 @@ export const SupportChatInputSchema = z.object({
 export type SupportChatInput = z.infer<typeof SupportChatInputSchema>;
 
 export const SupportChatOutputSchema = z.object({
-  response: z.string().describe("The chatbot's response to the user."),
+  text: z.string().describe("The chatbot's response to the user."),
 });
 export type SupportChatOutput = z.infer<typeof SupportChatOutputSchema>;
