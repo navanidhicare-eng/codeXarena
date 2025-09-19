@@ -1,6 +1,7 @@
 
 
 
+
 import { getAiHint } from '@/ai/flows/ai-hint-system';
 
 
@@ -182,14 +183,14 @@ false
 ];
 
 // Store callbacks
-let onMatchFoundCallback: (gameState: Omit<GameState, 'matchId'>) => void;
+let onMatchFoundCallback: (gameState: GameState) => void;
 let onMatchFoundForRoomCallback: (gameState: GameState) => void;
 let onStateUpdateCallback: (gameState: GameState) => void;
 let onGameOverCallback: (data: { winner: string }) => void;
 let onHintResultCallback: (data: { hint: string }) => void;
 let onHintErrorCallback: (data: { message: string }) => void;
 let onEmojiReceiveCallback: (data: { emoji: string }) => void;
-let onRoomCreatedCallback: (data: { roomId: string }) => void;
+let onRoomCreatedCallback: (data: { roomId: string; players: string[] }) => void;
 let onRoomUpdatedCallback: (data: { players: string[] }) => void;
 let onRoomJoinFailedCallback: (data: { error: string }) => void;
 
@@ -197,8 +198,6 @@ let onRoomJoinFailedCallback: (data: { error: string }) => void;
 const rooms: { [key: string]: { players: string[], gameState?: GameState, simulationInterval?: NodeJS.Timeout } } = {};
 let activeGameState: GameState | null = null;
 let simulationInterval: NodeJS.Timeout | null = null;
-let connectedPlayerName: string;
-
 
 const createInitialGameState = (players: string[]) => {
     const currentProblem = problems[Math.floor(Math.random() * problems.length)];
@@ -259,20 +258,13 @@ const startBotSimulation = (gameState: GameState, botName: string) => {
     }, 3000 + Math.random() * 2000); // Simulate bot action every 3-5 seconds
 };
 
-const connect = (playerName: string) => {
-    console.log(`Mock socket connected for player: ${playerName}`);
-    connectedPlayerName = playerName;
-    return { on: () => {}, off: () => {} };
-};
-
-const joinMatchmaking = () => {
+const joinMatchmaking = (playerName: string) => {
     console.log('Player joined quick-match. Simulating opponent...');
     setTimeout(() => {
-        const gameState = createInitialGameState([connectedPlayerName, 'Opponent_Bot']);
+        const gameState = createInitialGameState([playerName, 'Opponent_Bot']);
         gameState.status = 'in-progress';
         if (onMatchFoundCallback) {
-            const { matchId, ...rest } = gameState;
-            onMatchFoundCallback(rest); 
+            onMatchFoundCallback(gameState); 
             startBotSimulation(gameState, 'Opponent_Bot');
         }
     }, 2000);
@@ -284,8 +276,7 @@ const emitCreateRoom = ({ playerName }: { playerName: string }) => {
     rooms[roomId] = { players: [playerName] };
     
     setTimeout(() => {
-        onRoomCreatedCallback?.({ roomId });
-        onRoomUpdatedCallback?.({ players: rooms[roomId].players });
+        onRoomCreatedCallback?.({ roomId, players: rooms[roomId].players });
         
         // Auto-add bot
         setTimeout(() => {
@@ -299,8 +290,8 @@ const emitCreateRoom = ({ playerName }: { playerName: string }) => {
 };
 
 
-const emitJoinRoom = (roomId: string) => {
-    console.log(`${connectedPlayerName} is trying to join room ${roomId}`);
+const emitJoinRoom = (playerName: string, roomId: string) => {
+    console.log(`${playerName} is trying to join room ${roomId}`);
     setTimeout(() => {
         const room = rooms[roomId];
         if (!room) {
@@ -311,8 +302,8 @@ const emitJoinRoom = (roomId: string) => {
             onRoomJoinFailedCallback?.({ error: 'Room is full.' });
             return;
         }
-        if (!room.players.includes(connectedPlayerName)) {
-            room.players.push(connectedPlayerName);
+        if (!room.players.includes(playerName)) {
+            room.players.push(playerName);
         }
         onRoomUpdatedCallback?.({ players: room.players });
     }, 500);
@@ -328,20 +319,23 @@ const emitStartBattle = (roomId: string) => {
         
         setTimeout(() => {
             onMatchFoundForRoomCallback?.(gameState);
-            startBotSimulation(gameState, 'Rival_Bot');
+            const botPlayer = room.players.find(p => p.includes('_Bot'));
+            if (botPlayer) {
+                startBotSimulation(gameState, botPlayer);
+            }
         }, 1000);
     }
 };
 
-const emitRunCode = (code: string) => {
+const emitRunCode = (playerName: string, code: string) => {
     if (!activeGameState) return;
-    const userPlayer = activeGameState.players.find(p => p.name === connectedPlayerName);
+    const userPlayer = activeGameState.players.find(p => p.name === playerName);
     if (!userPlayer) return;
 
     const currentProblem = problems.find(p => p.title === activeGameState?.problem.title);
     if (!currentProblem) return;
 
-    console.log(`Received code to run: ${code}`);
+    console.log(`Received code from ${playerName} to run: ${code}`);
     const results = currentProblem.solutionChecker(code, 'javascript'); // Mock language
     let score = 0;
     results.forEach((res, index) => {
@@ -416,7 +410,6 @@ const off = (eventName: string) => {
 };
 
 const mockSocketService = {
-  connect,
   joinMatchmaking,
   emitCreateRoom,
   emitJoinRoom,

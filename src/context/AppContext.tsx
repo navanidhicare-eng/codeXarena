@@ -127,8 +127,10 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
             setTimeout(() => setOpponentEmoji(null), 2000);
         });
 
-        mockSocketService.onRoomCreated(({ roomId }) => {
+        mockSocketService.onRoomCreated(({ roomId, players }) => {
             console.log('Room created, navigating to:', roomId);
+            setPlayerName(players[0]);
+            setRoomPlayers(players);
             setIsRoomAdmin(true);
             router.push(`/room/${roomId}`);
         });
@@ -152,13 +154,14 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
 
     const performAction = (name: string, action: () => void) => {
         setPlayerName(name);
-        mockSocketService.connect(name);
+        // In a real scenario, you'd connect to a server here.
+        // For mock, we just set the name and proceed.
         action();
     };
 
     const connectAndJoin = (name: string) => {
         performAction(name, () => {
-            mockSocketService.joinMatchmaking();
+            mockSocketService.joinMatchmaking(name);
         });
     };
 
@@ -170,7 +173,7 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
 
     const joinRoom = (name: string, roomId: string) => {
         performAction(name, () => {
-            mockSocketService.emitJoinRoom(roomId);
+            mockSocketService.emitJoinRoom(name, roomId);
             router.push(`/room/${roomId}`);
         });
     }
@@ -180,7 +183,8 @@ export const AppContextProvider = ({ children }: { children: ReactNode }) => {
     };
     
     const emitRunCode = (code: string) => {
-        mockSocketService.emitRunCode(code);
+        if (!playerName) return;
+        mockSocketService.emitRunCode(playerName, code);
     };
 
     const emitGetHint = (code: string) => {

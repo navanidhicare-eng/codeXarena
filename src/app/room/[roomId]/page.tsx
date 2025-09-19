@@ -1,20 +1,23 @@
 
 "use client";
 
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext, useRef } from "react";
 import { AppContext } from "@/context/AppContext";
 import { Button } from "@/components/ui/button";
-import { Copy, Users } from "lucide-react";
+import { Copy, Users, Download, Share2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
 import { useRouter, useParams } from "next/navigation";
 
-const QRCode = ({ text }: { text: string }) => {
+const QRCode = ({ text, qrCodeRef }: { text: string; qrCodeRef: React.RefObject<HTMLDivElement> }) => {
   if (!text) return null;
-  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(text)}`;
-  return <Image src={qrUrl} alt="Room QR Code" width={150} height={150} className="rounded-lg border-4 border-primary" />;
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(text)}`;
+  return (
+    <div ref={qrCodeRef} className="p-2 bg-white rounded-lg">
+        <Image src={qrUrl} alt="Room QR Code" width={200} height={200} className="rounded-md" priority />
+    </div>
+  );
 };
-
 
 export default function RoomWaitingPage() {
   const params = useParams();
@@ -22,13 +25,21 @@ export default function RoomWaitingPage() {
   const { playerName, roomPlayers, isRoomAdmin, startBattle } = useContext(AppContext);
   const { toast } = useToast();
   const router = useRouter();
+  const qrCodeRef = useRef<HTMLDivElement>(null);
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    if (!playerName) {
+    setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (isMounted && !playerName) {
       router.push('/');
     }
-  }, [playerName, router]);
+  }, [playerName, router, isMounted]);
 
+  const fullRoomUrl = isMounted ? `${window.location.origin}/join/${roomId}` : '';
+  
   const copyRoomId = () => {
     if(!fullRoomUrl) return;
     navigator.clipboard.writeText(fullRoomUrl);
@@ -38,7 +49,31 @@ export default function RoomWaitingPage() {
     });
   };
 
-  const fullRoomUrl = typeof window !== 'undefined' ? `${window.location.origin}/join/${roomId}` : '';
+  const downloadQRCode = () => {
+    const qrImage = qrCodeRef.current?.querySelector('img');
+    if (qrImage) {
+        const link = document.createElement('a');
+        link.href = qrImage.src;
+        link.download = `codexarena-room-${roomId}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+         toast({
+            title: "QR Code Downloaded!",
+        });
+    }
+  };
+
+  const shareOnWhatsApp = () => {
+    if(!fullRoomUrl) return;
+    const message = encodeURIComponent(`Join my CodeXarena battle! Click the link to enter the room: ${fullRoomUrl}`);
+    const whatsappUrl = `https://api.whatsapp.com/send?text=${message}`;
+    window.open(whatsappUrl, '_blank');
+  };
+
+  if (!isMounted) {
+    return null; // Or a loading skeleton
+  }
 
   return (
     <div className="h-screen w-screen flex flex-col items-center justify-center bg-background text-foreground p-4">
@@ -49,14 +84,23 @@ export default function RoomWaitingPage() {
         {/* Left Panel: Info */}
         <div className="bg-panel backdrop-blur-md border border-primary/20 rounded-lg p-6 flex flex-col items-center justify-center text-center">
           <h2 className="text-2xl font-headline text-secondary mb-4">Invite Your Opponent</h2>
-           <div className="mb-6 h-[150px]">
-             <QRCode text={fullRoomUrl} />
+           <div className="mb-6 h-[216px]">
+             <QRCode text={fullRoomUrl} qrCodeRef={qrCodeRef} />
           </div>
-          <p className="text-muted-foreground mb-2">Or share this Room URL:</p>
-          <div className="flex items-center gap-2 bg-background/50 border border-border px-4 py-2 rounded-lg">
+          <div className="flex items-center gap-2 bg-background/50 border border-border px-4 py-2 rounded-lg mb-4">
             <span className="text-lg font-code text-primary truncate">{fullRoomUrl}</span>
             <Button variant="ghost" size="icon" onClick={copyRoomId}>
               <Copy className="h-5 w-5 text-primary" />
+            </Button>
+          </div>
+          <div className="flex gap-2">
+            <Button onClick={downloadQRCode} variant="outline" className="border-secondary/50 hover:bg-secondary/10 hover:text-secondary">
+                <Download className="mr-2 h-4 w-4" />
+                Download QR
+            </Button>
+             <Button onClick={shareOnWhatsApp} className="bg-green-500 hover:bg-green-600 text-white">
+                <Share2 className="mr-2 h-4 w-4" />
+                Share on WhatsApp
             </Button>
           </div>
         </div>
@@ -67,7 +111,7 @@ export default function RoomWaitingPage() {
             <Users className="w-6 h-6"/>
             Players in Room ({roomPlayers.length}/2)
           </h2>
-          <div className="space-y-3 min-h-[100px]">
+          <div className="space-y-3 min-h-[150px]">
             {roomPlayers.map((player, index) => (
               <div key={index} className="flex items-center justify-between bg-background/50 p-3 rounded-lg border border-border">
                 <span className="font-semibold text-foreground">{player}</span>
@@ -75,7 +119,7 @@ export default function RoomWaitingPage() {
               </div>
             ))}
             {roomPlayers.length < 2 && (
-              <div className="flex items-center justify-center text-muted-foreground p-3">
+              <div className="flex items-center justify-center text-muted-foreground p-3 h-full">
                 Waiting for opponent...
               </div>
             )}
