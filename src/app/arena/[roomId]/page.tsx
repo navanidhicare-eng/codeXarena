@@ -73,8 +73,9 @@ export default function ArenaView() {
   }
 
   const handleRunCode = async () => {
+    if (!gameState?.problem.title) return;
     setIsCodeRunning(true);
-    await emitRunCode(playerCode, selectedLanguage, gameState?.problem.title || "");
+    await emitRunCode(playerCode, selectedLanguage, gameState.problem.title);
     setIsCodeRunning(false);
   };
 
