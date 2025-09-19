@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useRef, useEffect, FormEvent } from "react";
@@ -18,7 +19,27 @@ type Message = {
   id: string;
   role: "user" | "assistant";
   text: string;
+  options?: string[];
 };
+
+const QuickActions = ({ onSelect }: { onSelect: (action: string) => void }) => {
+  const actions = ["Events", "Clans", "Bug Hunts", "Profile", "Roadmaps"];
+  return (
+    <div className="flex flex-wrap gap-2 mt-2">
+      {actions.map((action) => (
+        <Button
+          key={action}
+          variant="outline"
+          size="sm"
+          className="bg-background/80 border-primary/50 hover:bg-primary/20"
+          onClick={() => onSelect(action)}
+        >
+          {action}
+        </Button>
+      ))}
+    </div>
+  );
+}
 
 export function Chatbot() {
   const { toast } = useToast();
@@ -29,7 +50,8 @@ export function Chatbot() {
     {
       id: "initial-message",
       role: "assistant",
-      text: "Hello! I'm your CodeXarena assistant. How can I help you navigate the app or solve any problems?",
+      text: "Hello! I'm your CodeXarena assistant. How can I help you? You can ask me a question or choose one of the options below.",
+      options: ["Events", "Clans", "Bug Hunts"],
     },
   ]);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
@@ -49,14 +71,13 @@ export function Chatbot() {
     }
   }, [isOpen, messages]);
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    if (!input.trim() || isLoading) return;
+  const handleSendMessage = async (messageText: string) => {
+    if (!messageText.trim() || isLoading) return;
 
     const userMessage: Message = {
       id: `user-${Date.now()}`,
       role: "user",
-      text: input,
+      text: messageText,
     };
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
@@ -69,7 +90,7 @@ export function Chatbot() {
       }));
 
       const result = await getSupportChatMessage({
-        message: input,
+        message: messageText,
         history: chatHistory,
       });
 
@@ -81,17 +102,26 @@ export function Chatbot() {
       setMessages((prev) => [...prev, assistantMessage]);
     } catch (error) {
       console.error("Error getting chat response:", error);
-      toast({
-        variant: "destructive",
-        title: "Chatbot Error",
-        description: "Could not get a response. Please try again.",
-      });
-      // remove the user's message if there was an error
-      setMessages((prev) => prev.slice(0, prev.length - 1));
+      const errorMessage: Message = {
+        id: `error-${Date.now()}`,
+        role: "assistant",
+        text: "Sorry, I encountered an error. Please try asking in a different way."
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+      
     } finally {
       setIsLoading(false);
     }
   };
+
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    handleSendMessage(input);
+  }
+  
+  const handleQuickActionSelect = (action: string) => {
+    handleSendMessage(action);
+  }
 
   return (
     <>
@@ -150,6 +180,7 @@ export function Chatbot() {
                         )}
                       >
                         <Balancer>{message.text}</Balancer>
+                        {message.id === 'initial-message' && <QuickActions onSelect={handleQuickActionSelect} />}
                       </div>
                        {message.role === "user" && (
                         <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
