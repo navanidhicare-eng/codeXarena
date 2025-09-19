@@ -7,7 +7,7 @@ import { PlayerPanel } from "@/components/PlayerPanel";
 import { OpponentPanel } from "@/components/OpponentPanel";
 import { AIHintModal } from "@/components/AIHintModal";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import {
   Panel,
   PanelGroup,
@@ -19,8 +19,9 @@ import { DiceRollAnimation } from "@/components/DiceRollAnimation";
 
 type Language = "javascript" | "python" | "java" | "cpp";
 
-export default function ArenaView({ params }: { params: { roomId: string } }) {
-  const { roomId } = params;
+export default function ArenaView() {
+  const params = useParams();
+  const roomId = params.roomId as string;
   const router = useRouter();
   const {
     playerName,

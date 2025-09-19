@@ -1,6 +1,7 @@
 
 
 
+
 type Language = "javascript" | "python" | "java" | "cpp";
 
 type StarterCode = {
@@ -10,7 +11,6 @@ type StarterCode = {
 type Problem = {
     title: string;
     description: string;
-    starterCode: StarterCode;
     solutionChecker: (code: string, lang: Language) => { name: string; passed: boolean }[];
 };
 
@@ -36,15 +36,22 @@ const problems: Problem[] = [
     {
         title: 'Two Sum',
         description: `Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.
+---
+### Sample Input
+\`\`\`
+nums = [2, 7, 11, 15], target = 9
+\`\`\`
 
-Sample Input: nums = [2, 7, 11, 15], target = 9
-Sample Output: [0, 1]
-Explanation: Because nums[0] + nums[1] == 9, we return [0, 1].
-
-Constraints:
-- 2 <= nums.length <= 10^4
-- -10^9 <= nums[i] <= 10^9
-- -10^9 <= target <= 10^9
+### Sample Output
+\`\`\`
+[0, 1]
+\`\`\`
+**Explanation:** Because nums[0] + nums[1] == 9, we return [0, 1].
+---
+### Constraints
+- \`2 <= nums.length <= 10^4\`
+- \`-10^9 <= nums[i] <= 10^9\`
+- \`-10^9 <= target <= 10^9\`
 - Only one valid answer exists.`,
         starterCode: {
             javascript: `function twoSum(nums, target) {\n  // Write your code here\n};`,
@@ -65,11 +72,17 @@ Constraints:
     {
         title: 'FizzBuzz',
         description: `Write a program that prints the numbers from 1 to 100. For multiples of three print “Fizz” instead of the number and for the multiples of five print “Buzz”. For numbers which are multiples of both three and five print “FizzBuzz”.
-
-Sample Input: n = 15
-Sample Output: ["1", "2", "Fizz", "4", "Buzz", "Fizz", "7", "8", "Fizz", "Buzz", "11", "Fizz", "13", "14", "FizzBuzz"]
-
-Constraints:
+---
+### Sample Input
+\`\`\`
+n = 15
+\`\`\`
+### Sample Output
+\`\`\`
+["1", "2", "Fizz", "4", "Buzz", "Fizz", "7", "8", "Fizz", "Buzz", "11", "Fizz", "13", "14", "FizzBuzz"]
+\`\`\`
+---
+### Constraints
 - The input is the range, typically 1 to 100.`,
         starterCode: {
             javascript: `function fizzBuzz() {\n  // Write your code here\n};`,
@@ -92,13 +105,19 @@ Constraints:
     {
         title: 'Reverse String',
         description: `Write a function that reverses a string. The input string is given as an array of characters s. You must do this by modifying the input array in-place with O(1) extra memory.
-
-Sample Input: s = ["h","e","l","l","o"]
-Sample Output: ["o","l","l","e","h"]
-
-Constraints:
-- 1 <= s.length <= 10^5
-- s[i] is a printable ascii character.`,
+---
+### Sample Input
+\`\`\`
+s = ["h","e","l","l","o"]
+\`\`\`
+### Sample Output
+\`\`\`
+["o","l","l","e","h"]
+\`\`\`
+---
+### Constraints
+- \`1 <= s.length <= 10^5\`
+- \`s[i]\` is a printable ascii character.`,
         starterCode: {
             javascript: `function reverseString(s) {\n  // Write your code here\n};`,
             python: `def reverse_string(s):\n  # Write your code here\n  pass`,
@@ -118,17 +137,29 @@ Constraints:
      {
         title: 'Is Palindrome',
         description: `Given an integer x, return true if x is a palindrome, and false otherwise.
+---
+### Sample Input
+\`\`\`
+x = 121
+\`\`\`
+### Sample Output
+\`\`\`
+true
+\`\`\`
+**Explanation:** 121 reads as 121 from left to right and from right to left.
 
-Sample Input: x = 121
-Sample Output: true
-Explanation: 121 reads as 121 from left to right and from right to left.
-
-Sample Input: x = -121
-Sample Output: false
-Explanation: From left to right, it reads -121. From right to left, it becomes 121-. Therefore it is not a palindrome.
-
-Constraints:
-- -2^31 <= x <= 2^31 - 1`,
+### Sample Input
+\`\`\`
+x = -121
+\`\`\`
+### Sample Output
+\`\`\`
+false
+\`\`\`
+**Explanation:** From left to right, it reads -121. From right to left, it becomes 121-. Therefore it is not a palindrome.
+---
+### Constraints
+- \`-2^31 <= x <= 2^31 - 1\``,
         starterCode: {
             javascript: `function isPalindrome(x) {\n  // Write your code here\n};`,
             python: `def is_palindrome(x):\n  # Write your code here\n  pass`,
@@ -159,13 +190,15 @@ let onRoomCreatedCallback: (data: { roomId: string }) => void;
 let onRoomUpdatedCallback: (data: { players: string[] }) => void;
 let onRoomJoinFailedCallback: (data: { error: string }) => void;
 
-// In-memory store for rooms
-const rooms: { [key: string]: { players: string[], gameState?: GameState } } = {};
-let currentProblem: Problem;
+// In-memory store for rooms and game simulations
+const rooms: { [key: string]: { players: string[], gameState?: GameState, simulationInterval?: NodeJS.Timeout } } = {};
+let activeGameState: GameState | null = null;
+let simulationInterval: NodeJS.Timeout | null = null;
 let connectedPlayerName: string;
 
+
 const createInitialGameState = (players: string[]) => {
-    currentProblem = problems[Math.floor(Math.random() * problems.length)];
+    const currentProblem = problems[Math.floor(Math.random() * problems.length)];
     const initialTestCases = currentProblem.solutionChecker('', 'javascript').map(tc => ({ name: tc.name, passed: null }));
 
     return {
@@ -184,6 +217,45 @@ const createInitialGameState = (players: string[]) => {
     };
 };
 
+const startBotSimulation = (gameState: GameState, botName: string) => {
+    if (simulationInterval) clearInterval(simulationInterval);
+
+    activeGameState = gameState;
+    const botPlayer = activeGameState.players.find(p => p.name === botName);
+    if (!botPlayer) return;
+
+    let testCaseIndex = 0;
+    simulationInterval = setInterval(() => {
+        if (!activeGameState || activeGameState.status === 'finished') {
+            if (simulationInterval) clearInterval(simulationInterval);
+            return;
+        }
+
+        // Pass a test case for the bot
+        if (testCaseIndex < botPlayer.testCases.length) {
+            botPlayer.testCases[testCaseIndex].passed = true;
+            botPlayer.score++;
+            testCaseIndex++;
+            onStateUpdateCallback?.(activeGameState);
+        }
+
+        // Send a random emoji
+        if (Math.random() < 0.2) { // 20% chance to send an emoji
+            const emojis = ['👍', '😂', '🤔', '🔥', '🤯', '🎉'];
+            const randomEmoji = emojis[Math.floor(Math.random() * emojis.length)];
+            onEmojiReceiveCallback?.({ emoji: randomEmoji });
+        }
+
+        // Check for bot win
+        if (botPlayer.score === botPlayer.testCases.length) {
+            activeGameState.status = 'finished';
+            onGameOverCallback?.({ winner: botPlayer.name });
+            if (simulationInterval) clearInterval(simulationInterval);
+        }
+
+    }, 3000 + Math.random() * 2000); // Simulate bot action every 3-5 seconds
+};
+
 const connect = (playerName: string) => {
     console.log(`Mock socket connected for player: ${playerName}`);
     connectedPlayerName = playerName;
@@ -198,21 +270,31 @@ const joinMatchmaking = () => {
         if (onMatchFoundCallback) {
             const { matchId, ...rest } = gameState;
             onMatchFoundCallback(rest); 
+            startBotSimulation(gameState, 'Opponent_Bot');
         }
-        // No opponent simulation needed for quick match mock
     }, 2000);
 };
 
 const emitCreateRoom = ({ playerName }: { playerName: string }) => {
     const roomId = `MOCK-${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
     console.log(`${playerName} is creating room ${roomId}`);
-    rooms[roomId] = { players: [playerName, 'Rival_Bot'] };
+    rooms[roomId] = { players: [playerName] };
     
     setTimeout(() => {
         onRoomCreatedCallback?.({ roomId });
         onRoomUpdatedCallback?.({ players: rooms[roomId].players });
+        
+        // Auto-add bot
+        setTimeout(() => {
+            if (rooms[roomId] && rooms[roomId].players.length < 2) {
+                rooms[roomId].players.push('Rival_Bot');
+                onRoomUpdatedCallback?.({ players: rooms[roomId].players });
+            }
+        }, 1000);
+
     }, 500);
 };
+
 
 const emitJoinRoom = (roomId: string) => {
     console.log(`${connectedPlayerName} is trying to join room ${roomId}`);
@@ -243,16 +325,37 @@ const emitStartBattle = (roomId: string) => {
         
         setTimeout(() => {
             onMatchFoundForRoomCallback?.(gameState);
-            // In a real scenario, you'd emit to all players in the room.
-            // Here, we just call the callback for the current client.
+            startBotSimulation(gameState, 'Rival_Bot');
         }, 1000);
     }
 };
 
 const emitRunCode = (code: string) => {
+    if (!activeGameState) return;
+    const userPlayer = activeGameState.players.find(p => p.name === connectedPlayerName);
+    if (!userPlayer) return;
+
+    const currentProblem = problems.find(p => p.title === activeGameState?.problem.title);
+    if (!currentProblem) return;
+
     console.log(`Received code to run: ${code}`);
-    // This part needs a valid game state to modify, which is complex in mock.
-    // For now, this is a simplified mock.
+    const results = currentProblem.solutionChecker(code, 'javascript'); // Mock language
+    let score = 0;
+    results.forEach((res, index) => {
+        if (userPlayer.testCases[index]) {
+            userPlayer.testCases[index].passed = res.passed;
+            if(res.passed) score++;
+        }
+    });
+    userPlayer.score = score;
+    
+    onStateUpdateCallback?.(activeGameState);
+
+    if (userPlayer.score === userPlayer.testCases.length) {
+        activeGameState.status = 'finished';
+        onGameOverCallback?.({ winner: userPlayer.name });
+        if (simulationInterval) clearInterval(simulationInterval);
+    }
 };
 
 const emitGetHint = () => {
