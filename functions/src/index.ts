@@ -6,16 +6,24 @@ import * as functions from "firebase-functions";
 import axios from "axios";
 import * as cors from "cors";
 
-// IMPORTANT: Replace this with your deployed website's URL for production security.
-const allowedOrigins = ["https://code-x-arena.onrender.com", "http://localhost:3000", "https://6000-firebase-studio-....cloudworkstations.dev"];
+// A regex to match any cloudworkstations.dev URL and other allowed origins.
+const allowedOrigins = [
+    /https:\/\/.*-firebase-studio-.*\.cloudworkstations\.dev/,
+    "https://code-x-arena.onrender.com", 
+    "http://localhost:3000"
+];
 
 const corsMiddleware = cors({
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+
+    // Check if the origin matches any of the allowed origins (including the regex)
+    if (allowedOrigins.some(o => typeof o === 'string' ? o === origin : o.test(origin))) {
+      return callback(null, true);
     }
+    
+    return callback(new Error("Not allowed by CORS"));
   },
 });
 
