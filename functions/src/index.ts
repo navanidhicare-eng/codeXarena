@@ -7,22 +7,27 @@ import axios from "axios";
 import * as cors from "cors";
 import { problems } from "./game-state"; // Assuming game-state is compiled to the same dir
 
+// A mapping from your app's language names to Piston's runtime names.
+const languageMapping: { [key: string]: { language: string, version: string } } = {
+    javascript: { language: "javascript", version: "18.15.0" },
+    python: { language: "python", version: "3.10.0" },
+    java: { language: "java", version: "15.0.2" },
+    cpp: { language: "c++", version: "10.2.0" },
+};
+
 const allowedOrigins = [
     "https://code-x-arena.onrender.com",
     "http://localhost:3000",
-    /https:\/\/.*cloudworkstations.dev/
 ];
-
 const corsMiddleware = cors({
     origin: (origin, callback) => {
-        if (!origin || allowedOrigins.some(o => typeof o === 'string' ? o === origin : o.test(origin))) {
+        if (!origin || allowedOrigins.includes(origin) || /https:\/\/.*cloudworkstations\.dev/.test(origin)) {
             callback(null, true);
         } else {
             callback(new Error("Not allowed by CORS"));
         }
     },
 });
-
 
 type TestCaseResult = {
     input: string;
@@ -52,19 +57,13 @@ export const runCode = functions.https.onRequest((request, response) => {
             response.status(400).send("Bad Request: 'code', 'lang', and 'problemTitle' are required.");
             return;
         }
-        
+
         const problem = problems.find(p => p.title === problemTitle);
         if (!problem) {
             response.status(404).send({ message: `Problem '${problemTitle}' not found.` });
             return;
         }
 
-        const languageMapping: { [key: string]: { language: string, version: string } } = {
-            javascript: { language: "javascript", version: "18.15.0" },
-            python: { language: "python", version: "3.10.0" },
-            java: { language: "java", version: "15.0.2" },
-            cpp: { language: "c++", version: "10.2.0" },
-        };
         const pistonLang = languageMapping[lang];
         if (!pistonLang) {
             response.status(400).send(`Bad Request: Language '${lang}' is not supported.`);
@@ -73,9 +72,12 @@ export const runCode = functions.https.onRequest((request, response) => {
 
         const testCaseResults: TestCaseResult[] = [];
         let finalResult: CodeExecutionResult['finalResult'] = 'Accepted';
+        const allOutputs: string[] = [];
+        const allErrors: string[] = [];
 
         for (const testCase of problem.testCases) {
             // Append a call to the function with the specific input for each test case
+            // This is a simplified approach; more complex languages might need different scaffolding.
             const fullCode = `${code}\nconsole.log(JSON.stringify(${problem.functionName}(${testCase.input})));`;
 
             const payload = {
@@ -86,8 +88,22 @@ export const runCode = functions.https.onRequest((request, response) => {
 
             try {
                 const pistonResponse = await axios.post("https://emkc.org/api/v2/piston/execute", payload);
-                const output = pistonResponse.data.run.stdout.trim();
-                const passed = output === testCase.expected;
+                
+                const runData = pistonResponse.data.run;
+                const output = (runData.stdout || "").trim();
+                const error = (runData.stderr || "").trim();
+                
+                if (error) {
+                    allErrors.push(`Test Case ${testCaseResults.length + 1}:\n${error}`);
+                }
+                 if (output) {
+                    allOutputs.push(output);
+                }
+
+                // Clean the output for comparison.
+                const cleanedOutput = output.replace(/"/g, "'");
+                const cleanedExpected = testCase.expected.replace(/"/g, "'");
+                const passed = cleanedOutput === cleanedExpected;
 
                 testCaseResults.push({
                     input: testCase.input,
@@ -102,24 +118,34 @@ export const runCode = functions.https.onRequest((request, response) => {
 
             } catch (error) {
                 functions.logger.error("Error calling Piston API:", error);
-                 if (axios.isAxiosError(error) && error.response) {
+                if (axios.isAxiosError(error) && error.response) {
                     functions.logger.error("Piston API Response:", error.response.data);
-                    response.status(error.response.status).send(error.response.data);
+                    // Return the error from Piston if available
+                    response.status(500).json({ 
+                        finalResult: 'Error',
+                        testCaseResults: [],
+                        stdout: null,
+                        stderr: error.response.data?.message || "An error occurred with the Piston API.",
+                        error: "Piston API Error"
+                    });
                 } else {
-                    response.status(500).send({ message: "An internal error occurred." });
+                    response.status(500).json({ 
+                         finalResult: 'Error',
+                        testCaseResults: [],
+                        stdout: null,
+                        stderr: "An internal server error occurred.",
+                        error: "Internal Server Error"
+                     });
                 }
-                return; // Stop on first error
+                return; // Stop on first Piston error
             }
         }
         
-        // This is a simplified stdout/stderr handling. A real implementation might combine them.
-        const firstFailingCase = testCaseResults.find(r => !r.passed);
-
         response.status(200).json({
             finalResult: finalResult,
             testCaseResults: testCaseResults,
-            stdout: firstFailingCase ? `Input: ${firstFailingCase.input}\nYour Output: ${firstFailingCase.output}` : 'All tests passed!',
-            stderr: null, // Piston combines stderr into stdout, needs parsing if separated.
+            stdout: allOutputs.join('\n---\n') || null,
+            stderr: allErrors.join('\n---\n') || null,
             error: null,
         });
     });
