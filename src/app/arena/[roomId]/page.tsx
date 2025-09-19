@@ -19,6 +19,9 @@ import { EmojiToolbar } from "@/components/EmojiToolbar";
 import { motion, AnimatePresence } from "framer-motion";
 import { DiceRollAnimation } from "@/components/DiceRollAnimation";
 import mockSocketService from "@/services/mockSocketService";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
 
 type Language = "javascript" | "python" | "java" | "cpp";
 
@@ -144,7 +147,15 @@ export default function ArenaView() {
   }
   
   return (
-    <div className="h-screen w-screen bg-background p-4 flex flex-col gap-4">
+    <div className="h-screen w-screen bg-background p-4 flex flex-col gap-4 relative">
+        <div className="absolute top-6 left-6 z-20">
+            <Button asChild variant="outline" className="border-secondary/50 hover:bg-secondary/10 hover:text-secondary">
+            <Link href="/">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Home
+            </Link>
+            </Button>
+        </div>
       <div className="relative">
         <BattleScoreboard
           player1={{ name: self.name, score: self.testCases.filter(c => c.passed).length }}
