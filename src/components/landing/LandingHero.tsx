@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useContext } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Swords, Users, LogIn, Bug, Shield, Calendar } from 'lucide-react';
@@ -9,14 +9,36 @@ import { motion } from 'framer-motion';
 import Image from 'next/image';
 import Link from 'next/link';
 import { JoinRoomModal } from './JoinRoomModal';
+import { AppContext } from '@/context/AppContext';
+import { useRouter } from 'next/navigation';
 
-type LandingHeroProps = {
-  onEnterArena: (playerName: string) => void;
-  onCreateRoom: (playerName:string) => void;
-  onJoinRoom: (playerName: string, roomId: string) => void;
-};
+export function LandingHero() {
+  const { connectAndJoin, createRoom, joinRoom, gameState } = useContext(AppContext);
+  const router = useRouter();
 
-export function LandingHero({ onEnterArena, onCreateRoom, onJoinRoom }: LandingHeroProps) {
+  useEffect(() => {
+      if (gameState?.matchId && !window.location.pathname.startsWith('/arena')) {
+          router.push(`/arena/${gameState.matchId}`);
+      }
+  }, [gameState, router]);
+
+
+  const handleEnterArena = (playerName: string) => {
+      if (!playerName.trim()) return;
+      connectAndJoin(playerName.trim());
+      router.push('/matchmaking');
+  };
+
+  const handleCreateRoom = (playerName: string) => {
+      if (!playerName.trim()) return;
+      createRoom(playerName.trim());
+  }
+
+  const handleJoinRoom = (playerName: string, roomId: string) => {
+      if (!playerName.trim() || !roomId.trim()) return;
+      joinRoom(playerName, roomId);
+  }
+
   const [playerName, setPlayerName] = useState('');
   const [isJoinModalOpen, setJoinModalOpen] = useState(false);
   const fullText = "Code, Battle, Learn.";
@@ -67,7 +89,7 @@ export function LandingHero({ onEnterArena, onCreateRoom, onJoinRoom }: LandingH
           {/* Background Video/Image */}
           <div className="absolute inset-0 w-full h-full bg-black z-0">
               <Image
-                  src="https://i.ibb.co/pvfNdW0x/Whats-App-Image-2025-09-19-at-20-29-32-0fa2640d.jpg"
+                  src="https://i.ibb.co/TxJmYdjC/Whats-App-Image-2025-09-19-at-20-29-32-26230a59.jpg"
                   alt="CodeXarena battle"
                   fill
                   sizes="100vw"
@@ -104,7 +126,7 @@ export function LandingHero({ onEnterArena, onCreateRoom, onJoinRoom }: LandingH
                       onChange={(e) => setPlayerName(e.target.value)}
                       className="h-14 flex-1 text-lg bg-background/50 border-2 border-primary/50 focus-visible:ring-primary"
                       onKeyDown={(e) => {
-                          if (e.key === 'Enter') onEnterArena(playerName)
+                          if (e.key === 'Enter') handleEnterArena(playerName)
                       }}
                       suppressHydrationWarning
                   />
@@ -112,7 +134,7 @@ export function LandingHero({ onEnterArena, onCreateRoom, onJoinRoom }: LandingH
               <div className="flex flex-wrap justify-center gap-4 mt-2">
                   <Button
                       size="lg"
-                      onClick={() => onEnterArena(playerName)}
+                      onClick={() => handleEnterArena(playerName)}
                       disabled={!playerName.trim()}
                       className="h-14 text-lg font-bold bg-primary hover:bg-primary/90 shadow-primary-glow"
                   >
@@ -122,7 +144,7 @@ export function LandingHero({ onEnterArena, onCreateRoom, onJoinRoom }: LandingH
                   <Button
                       size="lg"
                       variant="secondary"
-                      onClick={() => onCreateRoom(playerName)}
+                      onClick={() => handleCreateRoom(playerName)}
                       disabled={!playerName.trim()}
                       className="h-14 text-lg font-bold shadow-secondary-glow"
                   >

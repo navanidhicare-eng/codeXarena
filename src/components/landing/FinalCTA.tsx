@@ -1,17 +1,24 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, useContext } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Swords } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { AppContext } from '@/context/AppContext';
+import { useRouter } from 'next/navigation';
 
-type FinalCTAProps = {
-  onEnterArena: (playerName: string) => void;
-};
+export function FinalCTA() {
+  const { connectAndJoin } = useContext(AppContext);
+  const router = useRouter();
 
-export function FinalCTA({ onEnterArena }: FinalCTAProps) {
+  const handleEnterArena = (playerName: string) => {
+    if (!playerName.trim()) return;
+    connectAndJoin(playerName.trim());
+    router.push('/matchmaking');
+  };
+
   const [playerName, setPlayerName] = useState('');
 
   return (
@@ -32,13 +39,13 @@ export function FinalCTA({ onEnterArena }: FinalCTAProps) {
                     onChange={(e) => setPlayerName(e.target.value)}
                     className="h-14 flex-1 text-lg bg-background/50 border-2 border-primary/50 focus-visible:ring-primary"
                     onKeyDown={(e) => {
-                        if (e.key === 'Enter') onEnterArena(playerName)
+                        if (e.key === 'Enter') handleEnterArena(playerName)
                     }}
                     suppressHydrationWarning
                 />
                 <Button
                     size="lg"
-                    onClick={() => onEnterArena(playerName)}
+                    onClick={() => handleEnterArena(playerName)}
                     disabled={!playerName.trim()}
                     className="h-14 text-lg font-bold bg-primary hover:bg-primary/90 shadow-primary-glow"
                 >
